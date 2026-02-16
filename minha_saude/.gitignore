@@ -1,0 +1,59 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+.idea/
+.vscode/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .flutter-plugins-dependencies file should not be checked into version control.
+.flutter-plugins-dependencies
+
+# The .dart_tool/ directory should not be checked into version control.
+.dart_tool/
+
+# Android related
+**/android/**/generated/
+**/android/gen/
+**/android/out/
+**/android/local.properties
+**/android/app/upload-keystore.jks
+**/android/app/upload-keystore.p12
+**/android/app/key.properties
+*.jks
+*.p12
+
+# iOS related
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets.zip
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.h
+**/ios/Runner/GeneratedPluginRegistrant.m
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/App.framework
+**/ios/Flutter/App.struct
+**/ios/Flutter/flutter_export_environment.sh
+
+# Web related
+build/
+.pub-cache/
+.pub/
+
+# Symbols and secrets
+**/secrets.dart
