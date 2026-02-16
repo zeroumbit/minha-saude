@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:minha_saude/data/services/medication_provider.dart';
+import 'package:minha_saude/data/models/medication_model.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
