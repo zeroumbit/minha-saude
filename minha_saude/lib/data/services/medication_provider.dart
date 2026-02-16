@@ -10,6 +10,16 @@ class MedicationProvider with ChangeNotifier {
   List<Medication> get medications => _medications;
   bool get isLoading => _isLoading;
 
+  Future<void> editMedication(Medication medication) async {
+    try {
+      await _service.updateMedication(medication);
+      await loadMedications();
+    } catch (e) {
+      debugPrint('Error editing medication: $e');
+      rethrow;
+    }
+  }
+
   Future<void> loadMedications() async {
     _isLoading = true;
     notifyListeners();
@@ -25,10 +35,10 @@ class MedicationProvider with ChangeNotifier {
 
   Future<void> toggleMedicationStatus(Medication medication) async {
     if (medication.id == null) return;
-    
+
     final index = _medications.indexOf(medication);
     final newStatus = !medication.isTaken;
-    
+
     try {
       await _service.updateMedicationStatus(medication.id!, newStatus);
       _medications[index] = Medication(
@@ -53,6 +63,16 @@ class MedicationProvider with ChangeNotifier {
       await loadMedications();
     } catch (e) {
       debugPrint('Error adding medication: $e');
+    }
+  }
+
+  Future<void> deleteMedication(String id) async {
+    try {
+      await _service.deleteMedication(id);
+      await loadMedications();
+    } catch (e) {
+      debugPrint('Error deleting medication: $e');
+      rethrow;
     }
   }
 }

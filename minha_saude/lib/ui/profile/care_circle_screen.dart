@@ -22,29 +22,51 @@ class _CareCircleScreenState extends State<CareCircleScreen> {
     final emailController = TextEditingController();
     final nameController = TextEditingController();
     final relationshipController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Convidar Pessoa'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Nome'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome',
+                    hintText: 'Nome completo',
+                  ),
+                  validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'E-mail',
+                    hintText: 'exemplo@email.com',
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) =>
+                      v!.isEmpty || !v.contains('@') ? 'E-mail inválido' : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: relationshipController,
+                  decoration: const InputDecoration(
+                    labelText: 'Parentesco/Relação',
+                    hintText: 'Ex: Esposa, Médico, Filho',
+                  ),
+                  validator: (v) => v!.isEmpty ? 'Campo obrigatório' : null,
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'E-mail'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: relationshipController,
-              decoration:
-                  const InputDecoration(labelText: 'Parentesco/Relação'),
-            ),
-          ],
+          ),
         ),
         actions: [
           TextButton(
@@ -53,8 +75,7 @@ class _CareCircleScreenState extends State<CareCircleScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (nameController.text.isNotEmpty &&
-                  emailController.text.isNotEmpty) {
+              if (formKey.currentState!.validate()) {
                 context.read<CareCircleProvider>().inviteMember(
                       email: emailController.text.trim(),
                       name: nameController.text.trim(),

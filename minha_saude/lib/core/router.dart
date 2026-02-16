@@ -53,7 +53,8 @@ final GoRouter router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'add',
-                  builder: (context, state) => const AddMedicationScreen(),
+                  builder: (context, state) => AddMedicationScreen(
+                      medication: state.extra as Medication?),
                 ),
               ],
             ),
@@ -104,7 +105,8 @@ final GoRouter router = GoRouter(
     // Routes outside the shell (no bottom nav)
     GoRoute(
       path: '/add-medication',
-      builder: (context, state) => const AddMedicationScreen(),
+      builder: (context, state) =>
+          AddMedicationScreen(medication: state.extra as Medication?),
     ),
     GoRoute(
       path: '/medication-detail',

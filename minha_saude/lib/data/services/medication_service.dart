@@ -24,8 +24,15 @@ class MedicationService {
   Future<void> updateMedicationStatus(String id, bool isTaken) async {
     await _supabase
         .from('medications')
-        .update({'is_taken': isTaken})
-        .match({'id': id});
+        .update({'is_taken': isTaken}).match({'id': id});
+  }
+
+  Future<void> updateMedication(Medication medication) async {
+    if (medication.id == null) return;
+    await _supabase
+        .from('medications')
+        .update(medication.toJson())
+        .match({'id': medication.id!});
   }
 
   Future<void> deleteMedication(String id) async {

@@ -6,7 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AddMedicationScreen extends StatefulWidget {
-  const AddMedicationScreen({super.key});
+  final Medication? medication;
+  const AddMedicationScreen({super.key, this.medication});
 
   @override
   State<AddMedicationScreen> createState() => _AddMedicationScreenState();
@@ -20,6 +21,25 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   TimeOfDay _selectedTime = TimeOfDay.now();
   MedicationFrequency _selectedFrequency = MedicationFrequency.daily;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.medication != null) {
+      _nameController.text = widget.medication!.name;
+      _dosageController.text = widget.medication!.dosage;
+      _instructionsController.text = widget.medication!.instructions ?? '';
+      _selectedFrequency = widget.medication!.frequency;
+
+      final parts = widget.medication!.time.split(':');
+      if (parts.length >= 2) {
+        _selectedTime = TimeOfDay(
+          hour: int.parse(parts[0]),
+          minute: int.parse(parts[1]),
+        );
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -51,19 +71,26 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
-    final timeString = '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00';
+    final timeString =
+        '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00';
 
     final medication = Medication(
+      id: widget.medication?.id,
       userId: user.id,
       name: _nameController.text.trim(),
       dosage: _dosageController.text.trim(),
       time: timeString,
       instructions: _instructionsController.text.trim(),
       frequency: _selectedFrequency,
+      isTaken: widget.medication?.isTaken ?? false,
     );
 
     try {
-      await context.read<MedicationProvider>().addMedication(medication);
+      if (widget.medication != null) {
+        await context.read<MedicationProvider>().editMedication(medication);
+      } else {
+        await context.read<MedicationProvider>().addMedication(medication);
+      }
       if (mounted) {
         context.pop();
       }
@@ -84,9 +111,11 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.medication != null;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Medicamento'),
+        title: Text(isEditing ? 'Editar Medicamento' : 'Adicionar Medicamento'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -119,7 +148,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 title: const Text('Horário'),
                 trailing: Text(
                   _selectedTime.format(context),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 onTap: () => _selectTime(context),
                 shape: RoundedRectangleBorder(
@@ -163,7 +193,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
                 onPressed: _isLoading ? null : _save,
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Salvar Medicamento'),
+                    : Text(
+                        isEditing ? 'Salvar Alterações' : 'Salvar Medicamento'),
               ),
             ],
           ),

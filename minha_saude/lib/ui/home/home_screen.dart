@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 
 import 'package:minha_saude/data/services/medication_provider.dart';
+import 'package:minha_saude/data/services/profile_provider.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,6 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicationProvider>().loadMedications();
+      context.read<ProfileProvider>().loadProfile();
     });
   }
 
@@ -28,9 +31,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
-    final userName = user?.userMetadata?['first_name'] ?? 'Usuário';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Minha Saúde'),
@@ -42,14 +42,24 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Consumer<MedicationProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading && provider.medications.isEmpty) {
+      body: Consumer2<MedicationProvider, ProfileProvider>(
+        builder: (context, medProvider, profileProvider, child) {
+          if ((medProvider.isLoading && medProvider.medications.isEmpty) ||
+              profileProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          final userName = profileProvider.profile?.firstName ?? 'Usuário';
+          final takenMedications =
+              medProvider.medications.where((m) => m.isTaken).toList();
+
           return RefreshIndicator(
-            onRefresh: () => provider.loadMedications(),
+            onRefresh: () async {
+              await Future.wait([
+                medProvider.loadMedications(),
+                profileProvider.loadProfile(),
+              ]);
+            },
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16.0),
@@ -63,7 +73,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Theme.of(context).primaryColor,
                         ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
+                  Text(
+                    DateFormat("EEEE, d 'de' MMMM", 'pt_BR')
+                        .format(DateTime.now()),
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Text(
                     'Aqui está o resumo do seu dia.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -71,9 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                   ),
                   const SizedBox(height: 24),
-                  if (provider.medications.isNotEmpty)
+                  if (medProvider.medications.isNotEmpty)
                     _buildNextMedicationCard(
-                        context, provider.medications.first)
+                        context, medProvider.medications.first)
                   else
                     _buildEmptyMedicationCard(context),
                   const SizedBox(height: 24),
@@ -88,25 +107,31 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _buildQuickAccessButton(context, Icons.medication,
-                          'Remédios', () => context.push('/add-medication')),
-                      _buildQuickAccessButton(
-                          context, Icons.calendar_month, 'Consultas', () {}),
-                      _buildQuickAccessButton(
-                          context, Icons.person, 'Perfil', () {}),
+                          'Remédios', () => context.push('/medications')),
+                      _buildQuickAccessButton(context, Icons.calendar_month,
+                          'Consultas', () => context.push('/appointments')),
+                      _buildQuickAccessButton(context, Icons.person, 'Perfil',
+                          () => context.push('/profile')),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Atividades Recentes',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildRecentActivityItem(context, 'Consulta realizada',
-                      'Dr. Silva - Cardiologista', 'Ontem'),
-                  _buildRecentActivityItem(context, 'Medicamento tomado',
-                      'Dipirona 500mg', 'Hoje, 08:00'),
+                  if (takenMedications.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Text(
+                      'Atividades de Hoje',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    ...takenMedications
+                        .take(3)
+                        .map((med) => _buildRecentActivityItem(
+                              context,
+                              'Medicamento tomado',
+                              med.name,
+                              'Hoje às ${med.time.substring(0, 5)}',
+                            )),
+                  ],
                 ],
               ),
             ),

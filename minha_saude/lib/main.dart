@@ -9,8 +9,13 @@ import 'package:minha_saude/data/services/profile_provider.dart';
 import 'package:minha_saude/data/services/prescription_provider.dart';
 import 'package:minha_saude/data/services/care_circle_provider.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await initializeDateFormatting('pt_BR', null);
 
   await Supabase.initialize(
     url: 'https://kijqhifkreohdqetcnyl.supabase.co',
@@ -41,6 +46,14 @@ class MyApp extends StatelessWidget {
       title: 'Minha Saúde',
       theme: AppTheme.lightTheme,
       routerConfig: router,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('pt', 'BR'),
+      ],
     );
   }
 }
