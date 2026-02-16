@@ -7,6 +7,7 @@ import 'package:minha_saude/ui/medications/medication_list_screen.dart';
 import 'package:minha_saude/ui/medications/medication_detail_screen.dart';
 import 'package:minha_saude/ui/medications/add_medication_screen.dart';
 import 'package:minha_saude/ui/medications/prescriptions_screen.dart';
+import 'package:minha_saude/ui/medications/add_prescription_screen.dart';
 import 'package:minha_saude/ui/appointments/appointments_screen.dart';
 import 'package:minha_saude/ui/appointments/add_appointment_screen.dart';
 import 'package:minha_saude/ui/profile/profile_screen.dart';
@@ -56,6 +57,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/add-appointment',
       builder: (context, state) => const AddAppointmentScreen(),
+    ),
+    GoRoute(
+      path: '/add-prescription',
+      builder: (context, state) => const AddPrescriptionScreen(),
     ),
     GoRoute(
       path: '/profile',

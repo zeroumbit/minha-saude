@@ -6,13 +6,16 @@ import 'package:minha_saude/ui/theme/app_theme.dart';
 import 'package:minha_saude/data/services/medication_provider.dart';
 import 'package:minha_saude/data/services/appointment_provider.dart';
 import 'package:minha_saude/data/services/profile_provider.dart';
+import 'package:minha_saude/data/services/prescription_provider.dart';
+import 'package:minha_saude/data/services/care_circle_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Supabase.initialize(
     url: 'https://kijqhifkreohdqetcnyl.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpanFoaWZrcmVvaGRxZXRjbnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTE0OTksImV4cCI6MjA4Njc2NzQ5OX0.F2JjKFz9hK4i4mXDb-VUTiATC9gub-KhNlrRAagcI-I',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpanFoaWZrcmVvaGRxZXRjbnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTE0OTksImV4cCI6MjA4Njc2NzQ5OX0.F2JjKFz9hK4i4mXDb-VUTiATC9gub-KhNlrRAagcI-I',
   );
 
   runApp(
@@ -21,6 +24,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => MedicationProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
+        ChangeNotifierProvider(create: (_) => PrescriptionProvider()),
+        ChangeNotifierProvider(create: (_) => CareCircleProvider()),
       ],
       child: const MyApp(),
     ),

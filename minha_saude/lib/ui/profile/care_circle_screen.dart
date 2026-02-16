@@ -1,53 +1,193 @@
 import 'package:flutter/material.dart';
+import 'package:minha_saude/data/services/care_circle_provider.dart';
+import 'package:provider/provider.dart';
 
-class CareCircleScreen extends StatelessWidget {
+class CareCircleScreen extends StatefulWidget {
   const CareCircleScreen({super.key});
+
+  @override
+  State<CareCircleScreen> createState() => _CareCircleScreenState();
+}
+
+class _CareCircleScreenState extends State<CareCircleScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CareCircleProvider>().loadMembers();
+    });
+  }
+
+  void _showInviteDialog() {
+    final emailController = TextEditingController();
+    final nameController = TextEditingController();
+    final relationshipController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Convidar Pessoa'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'Nome'),
+            ),
+            TextField(
+              controller: emailController,
+              decoration: const InputDecoration(labelText: 'E-mail'),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            TextField(
+              controller: relationshipController,
+              decoration:
+                  const InputDecoration(labelText: 'Parentesco/Relação'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty &&
+                  emailController.text.isNotEmpty) {
+                context.read<CareCircleProvider>().inviteMember(
+                      email: emailController.text.trim(),
+                      name: nameController.text.trim(),
+                      relationship: relationshipController.text.trim(),
+                    );
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Convite enviado!')),
+                );
+              }
+            },
+            child: const Text('Enviar Convite'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Círculo de Cuidado')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.info_outline, color: Color(0xFF0A0AC2)),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      'Compartilhe seu histórico com familiares ou profissionais de saúde.',
-                      style: TextStyle(fontSize: 13),
+      body: Consumer<CareCircleProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.members.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.members.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.info_outline, color: Color(0xFF0A0AC2)),
+                    SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        'Pessoas neste círculo podem visualizar suas informações de saúde.',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: provider.members.length,
+                  itemBuilder: (context, index) {
+                    final member = provider.members[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        child: Text(member['member_name'][0].toUpperCase()),
+                      ),
+                      title: Text(member['member_name']),
+                      subtitle: Text(
+                          '${member['relationship']} • ${member['status']}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.remove_circle_outline,
+                            color: Colors.red),
+                        onPressed: () {
+                          provider.removeMember(member['id']);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _showInviteDialog,
+        icon: const Icon(Icons.person_add),
+        label: const Text('Convidar'),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.only(bottom: 32),
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Color(0xFF0A0AC2)),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    'Compartilhe seu histórico com familiares ou profissionais de saúde.',
+                    style: TextStyle(fontSize: 13),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Icon(Icons.people_outline, size: 100, color: Colors.grey[200]),
-            const SizedBox(height: 24),
-            const Text(
-              'Ainda não há ninguém no seu círculo',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const Spacer(),
+          Icon(Icons.people_outline, size: 100, color: Colors.grey[200]),
+          const SizedBox(height: 24),
+          const Text(
+            'Ainda não há ninguém no seu círculo',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const Spacer(),
+          ElevatedButton.icon(
+            onPressed: _showInviteDialog,
+            icon: const Icon(Icons.person_add_alt_1),
+            label: const Text('Convidar Pessoa'),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 56),
             ),
-            const Spacer(),
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Convidar Pessoa'),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 56),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
