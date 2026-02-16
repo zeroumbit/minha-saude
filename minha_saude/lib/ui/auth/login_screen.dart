@@ -31,14 +31,18 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await Supabase.instance.client.auth.signInWithPassword(
+      final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
+      debugPrint('Login sucesso: ${response.user?.email}');
     } on AuthException catch (e) {
-      _showError(e.message);
-    } catch (e) {
-      _showError('Erro inesperado ao realizar login.');
+      debugPrint('AuthException: ${e.message}');
+      _showError('Erro ao entrar: ${e.message}');
+    } catch (e, stackTrace) {
+      debugPrint('Erro inesperado: $e');
+      debugPrint('Stack: $stackTrace');
+      _showError('Erro ao conectar com servidor. Verifique sua internet.');
     } finally {
       if (mounted) {
         setState(() {
@@ -77,7 +81,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         data: {
@@ -87,6 +91,8 @@ class _LoginScreenState extends State<LoginScreen> {
           'city': _cityController.text.trim(),
         },
       );
+
+      debugPrint('Signup response: ${response.user?.email}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,9 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     } on AuthException catch (e) {
-      _showError(e.message);
-    } catch (e) {
-      _showError('Erro inesperado ao realizar cadastro.');
+      debugPrint('AuthException signup: ${e.message}');
+      _showError('Erro ao cadastrar: ${e.message}');
+    } catch (e, stackTrace) {
+      debugPrint('Erro inesperado signup: $e');
+      debugPrint('Stack: $stackTrace');
+      _showError('Erro ao conectar com servidor. Verifique sua internet.');
     } finally {
       if (mounted) {
         setState(() {
