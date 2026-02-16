@@ -12,6 +12,7 @@ import 'package:minha_saude/ui/appointments/appointments_screen.dart';
 import 'package:minha_saude/ui/appointments/add_appointment_screen.dart';
 import 'package:minha_saude/ui/profile/profile_screen.dart';
 import 'package:minha_saude/ui/profile/care_circle_screen.dart';
+import 'package:minha_saude/ui/shell/main_shell.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,13 +28,83 @@ final GoRouter router = GoRouter(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
     ),
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomeScreen(),
+
+    // Shell Route with bottom navigation bar
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, navigationShell) {
+        return MainShell(navigationShell: navigationShell);
+      },
+      branches: [
+        // Branch 0: Home
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const HomeScreen(),
+            ),
+          ],
+        ),
+        // Branch 1: Remédios
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/medications',
+              builder: (context, state) => const MedicationListScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (context, state) => const AddMedicationScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        // Branch 2: Agenda
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/appointments',
+              builder: (context, state) => const AppointmentsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (context, state) => const AddAppointmentScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        // Branch 3: Receitas
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/prescriptions',
+              builder: (context, state) => const PrescriptionsScreen(),
+              routes: [
+                GoRoute(
+                  path: 'add',
+                  builder: (context, state) => const AddPrescriptionScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+        // Branch 4: Perfil
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/profile',
+              builder: (context, state) => const ProfileScreen(),
+            ),
+          ],
+        ),
+      ],
     ),
+
+    // Routes outside the shell (no bottom nav)
     GoRoute(
-      path: '/medications',
-      builder: (context, state) => const MedicationListScreen(),
+      path: '/add-medication',
+      builder: (context, state) => const AddMedicationScreen(),
     ),
     GoRoute(
       path: '/medication-detail',
@@ -43,28 +114,12 @@ final GoRouter router = GoRouter(
       },
     ),
     GoRoute(
-      path: '/prescriptions',
-      builder: (context, state) => const PrescriptionsScreen(),
-    ),
-    GoRoute(
-      path: '/add-medication',
-      builder: (context, state) => const AddMedicationScreen(),
-    ),
-    GoRoute(
-      path: '/appointments',
-      builder: (context, state) => const AppointmentsScreen(),
-    ),
-    GoRoute(
       path: '/add-appointment',
       builder: (context, state) => const AddAppointmentScreen(),
     ),
     GoRoute(
       path: '/add-prescription',
       builder: (context, state) => const AddPrescriptionScreen(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
     ),
     GoRoute(
       path: '/care-circle',

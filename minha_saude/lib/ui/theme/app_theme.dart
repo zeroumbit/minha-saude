@@ -3,10 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF0A0AC2);
-  static const Color secondaryColor = Color(0xFF135BEC); // Um tom mais claro baseado em outros projetos
+  static const Color secondaryColor =
+      Color(0xFF135BEC); // Um tom mais claro baseado em outros projetos
   static const Color backgroundColor = Colors.white;
   static const Color errorColor = Color(0xFFD32F2F);
-  
+
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
@@ -45,7 +46,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primaryColor, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -60,6 +62,16 @@ class AppTheme {
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: Colors.black,
+        showUnselectedLabels: true,
+        selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold),
+        unselectedLabelStyle:
+            TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        type: BottomNavigationBarType.fixed,
       ),
     );
   }

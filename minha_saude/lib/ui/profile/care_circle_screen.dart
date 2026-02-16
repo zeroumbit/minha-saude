@@ -179,14 +179,6 @@ class _CareCircleScreenState extends State<CareCircleScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const Spacer(),
-          ElevatedButton.icon(
-            onPressed: _showInviteDialog,
-            icon: const Icon(Icons.person_add_alt_1),
-            label: const Text('Convidar Pessoa'),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 56),
-            ),
-          ),
         ],
       ),
     );

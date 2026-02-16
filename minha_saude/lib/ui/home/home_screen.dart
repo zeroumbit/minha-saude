@@ -113,32 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/add-medication'),
-        child: const Icon(Icons.add),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.medication), label: 'Remédios'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Agenda'),
-          BottomNavigationBarItem(icon: Icon(Icons.receipt_long), label: 'Receitas'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
-        currentIndex: 0,
-        selectedItemColor: Theme.of(context).primaryColor,
-        onTap: (index) {
-          if (index == 1) {
-            context.push('/medications');
-          } else if (index == 2) {
-            context.push('/appointments');
-          } else if (index == 3) {
-            context.push('/prescriptions');
-          } else if (index == 4) {
-            context.push('/profile');
-          }
-        },
-      ),
     );
   }
 
