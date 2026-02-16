@@ -72,7 +72,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
                   if (provider.medications.isNotEmpty)
-                    _buildNextMedicationCard(context, provider.medications.first)
+                    _buildNextMedicationCard(
+                        context, provider.medications.first)
                   else
                     _buildEmptyMedicationCard(context),
                   const SizedBox(height: 24),
@@ -86,9 +87,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildQuickAccessButton(context, Icons.medication, 'Remédios', () => context.push('/add-medication')),
-                      _buildQuickAccessButton(context, Icons.calendar_month, 'Consultas', () {}),
-                      _buildQuickAccessButton(context, Icons.person, 'Perfil', () {}),
+                      _buildQuickAccessButton(context, Icons.medication,
+                          'Remédios', () => context.push('/add-medication')),
+                      _buildQuickAccessButton(
+                          context, Icons.calendar_month, 'Consultas', () {}),
+                      _buildQuickAccessButton(
+                          context, Icons.person, 'Perfil', () {}),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -99,8 +103,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  _buildRecentActivityItem(context, 'Consulta realizada', 'Dr. Silva - Cardiologista', 'Ontem'),
-                  _buildRecentActivityItem(context, 'Medicamento tomado', 'Dipirona 500mg', 'Hoje, 08:00'),
+                  _buildRecentActivityItem(context, 'Consulta realizada',
+                      'Dr. Silva - Cardiologista', 'Ontem'),
+                  _buildRecentActivityItem(context, 'Medicamento tomado',
+                      'Dipirona 500mg', 'Hoje, 08:00'),
                 ],
               ),
             ),
@@ -114,8 +120,10 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Início'),
-          BottomNavigationBarItem(icon: Icon(Icons.medication), label: 'Remédios'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'Agenda'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.medication), label: 'Remédios'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today), label: 'Agenda'),
         ],
         currentIndex: 0,
         selectedItemColor: Theme.of(context).primaryColor,
@@ -135,56 +143,61 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => context.push('/medication-detail', extra: medication),
       child: Container(
         padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: Theme.of(context).primaryColor.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(Icons.access_time_filled,
+                  color: Theme.of(context).primaryColor, size: 32),
             ),
-            child: Icon(Icons.access_time_filled, color: Theme.of(context).primaryColor, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Próximo Medicamento',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Colors.grey[700],
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  medication.name,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                ),
-                Text(
-                  'Hoje às ${medication.time.substring(0, 5)}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Próximo Medicamento',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          color: Colors.grey[700],
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    medication.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  Text(
+                    'Hoje às ${medication.time.substring(0, 5)}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Checkbox(
-            value: medication.isTaken,
-            onChanged: (val) {
-              context.read<MedicationProvider>().toggleMedicationStatus(medication);
-            },
-          ),
-        ],
+            Checkbox(
+              value: medication.isTaken,
+              onChanged: (val) {
+                context
+                    .read<MedicationProvider>()
+                    .toggleMedicationStatus(medication);
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -217,7 +230,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildQuickAccessButton(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+  Widget _buildQuickAccessButton(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
     return Column(
       children: [
         InkWell(
@@ -250,7 +264,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecentActivityItem(BuildContext context, String title, String subtitle, String time) {
+  Widget _buildRecentActivityItem(
+      BuildContext context, String title, String subtitle, String time) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
@@ -268,8 +283,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text(subtitle, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
+                Text(subtitle,
+                    style: TextStyle(color: Colors.grey[600], fontSize: 13)),
               ],
             ),
           ),
@@ -279,4 +296,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

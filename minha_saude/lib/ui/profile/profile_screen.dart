@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:minha_saude/data/services/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,7 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nameController.text = profile.name ?? '';
       } else {
         context.read<ProfileProvider>().loadProfile().then((_) {
-           _nameController.text = context.read<ProfileProvider>().profile?.name ?? '';
+          _nameController.text =
+              context.read<ProfileProvider>().profile?.name ?? '';
         });
       }
     });
@@ -45,7 +47,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icon(_isEditing ? Icons.save : Icons.edit),
             onPressed: () async {
               if (_isEditing) {
-                await context.read<ProfileProvider>().updateProfile(_nameController.text);
+                await context
+                    .read<ProfileProvider>()
+                    .updateProfile(_nameController.text);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Perfil atualizado!')),
@@ -127,7 +131,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                   child: const Text(
                     'Sair da Conta',
-                    style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

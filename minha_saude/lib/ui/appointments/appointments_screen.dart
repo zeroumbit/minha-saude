@@ -52,7 +52,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/add-appointment'),
         label: const Text('Novo Agendamento'),
-        icon: const Icon(Icons.calendar_add_on),
+        icon: const Icon(Icons.edit_calendar),
       ),
     );
   }
@@ -102,7 +102,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.medical_services, color: Theme.of(context).primaryColor),
+                  child: Icon(Icons.medical_services,
+                      color: Theme.of(context).primaryColor),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -111,7 +112,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                     children: [
                       Text(
                         appointment.doctorName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       Text(
                         appointment.specialty,
@@ -129,7 +131,8 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 const SizedBox(width: 8),
                 Text('$dateStr às $timeStr'),
                 const Spacer(),
-                const Icon(Icons.location_on_outlined, size: 18, color: Colors.grey),
+                const Icon(Icons.location_on_outlined,
+                    size: 18, color: Colors.grey),
                 const SizedBox(width: 8),
                 Text(appointment.location),
               ],
