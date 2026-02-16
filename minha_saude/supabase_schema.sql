@@ -26,7 +26,10 @@ CREATE TABLE IF NOT EXISTS appointments (
 -- Tabela de Perfis de Usuário
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  name TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  state TEXT,
+  city TEXT,
   photo_url TEXT,
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -76,8 +79,14 @@ CREATE POLICY "Usuários podem atualizar seus próprios perfis" ON profiles FOR 
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, name)
-  VALUES (new.id, new.raw_user_meta_data->>'name');
+  INSERT INTO public.profiles (id, first_name, last_name, state, city)
+  VALUES (
+    new.id, 
+    new.raw_user_meta_data->>'first_name',
+    new.raw_user_meta_data->>'last_name',
+    new.raw_user_meta_data->>'state',
+    new.raw_user_meta_data->>'city'
+  );
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

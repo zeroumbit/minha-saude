@@ -12,28 +12,44 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _lastNameController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _cityController = TextEditingController();
   bool _isEditing = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final profile = context.read<ProfileProvider>().profile;
-      if (profile != null) {
-        _nameController.text = profile.name ?? '';
-      } else {
-        context.read<ProfileProvider>().loadProfile().then((_) {
-          _nameController.text =
-              context.read<ProfileProvider>().profile?.name ?? '';
-        });
-      }
+      _loadData();
     });
+  }
+
+  void _loadData() {
+    final profile = context.read<ProfileProvider>().profile;
+    if (profile != null) {
+      _firstNameController.text = profile.firstName ?? '';
+      _lastNameController.text = profile.lastName ?? '';
+      _stateController.text = profile.state ?? '';
+      _cityController.text = profile.city ?? '';
+    } else {
+      context.read<ProfileProvider>().loadProfile().then((_) {
+        final p = context.read<ProfileProvider>().profile;
+        _firstNameController.text = p?.firstName ?? '';
+        _lastNameController.text = p?.lastName ?? '';
+        _stateController.text = p?.state ?? '';
+        _cityController.text = p?.city ?? '';
+      });
+    }
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _stateController.dispose();
+    _cityController.dispose();
     super.dispose();
   }
 
@@ -44,12 +60,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('Meu Perfil'),
         actions: [
           IconButton(
-            icon: Icon(_isEditing ? Icons.save : Icons.edit),
+            icon: Icon(_isEditing ? Icons.check : Icons.edit),
             onPressed: () async {
               if (_isEditing) {
-                await context
-                    .read<ProfileProvider>()
-                    .updateProfile(_nameController.text);
+                await context.read<ProfileProvider>().updateProfile(
+                      firstName: _firstNameController.text.trim(),
+                      lastName: _lastNameController.text.trim(),
+                      state: _stateController.text.trim(),
+                      city: _cityController.text.trim(),
+                    );
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Perfil atualizado!')),
@@ -81,13 +100,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Icon(Icons.person, size: 50, color: Colors.white),
                 ),
                 const SizedBox(height: 24),
-                TextField(
-                  controller: _nameController,
-                  enabled: _isEditing,
-                  decoration: const InputDecoration(
-                    labelText: 'Nome Completo',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _firstNameController,
+                        enabled: _isEditing,
+                        decoration: const InputDecoration(
+                          labelText: 'Nome',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _lastNameController,
+                        enabled: _isEditing,
+                        decoration: const InputDecoration(
+                          labelText: 'Sobrenome',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _cityController,
+                        enabled: _isEditing,
+                        decoration: const InputDecoration(
+                          labelText: 'Cidade',
+                          prefixIcon: Icon(Icons.location_city_outlined),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: TextField(
+                        controller: _stateController,
+                        enabled: _isEditing,
+                        decoration: const InputDecoration(
+                          labelText: 'Estado',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -109,18 +169,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notificações'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.security_outlined),
-                  title: const Text('Privacidade'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
-                ),
-                ListTile(
-                  leading: const Icon(Icons.help_outline),
-                  title: const Text('Ajuda e Suporte'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {},
                 ),

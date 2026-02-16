@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = Supabase.instance.client.auth.currentUser;
-    final userName = user?.userMetadata?['name'] ?? 'Usuário';
+    final userName = user?.userMetadata?['first_name'] ?? 'Usuário';
 
     return Scaffold(
       appBar: AppBar(

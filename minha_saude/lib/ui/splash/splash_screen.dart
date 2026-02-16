@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -11,19 +13,23 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    // Inserir lógica de verificação ou carregar dependências se necessário
+    print('DEBUG: SplashScreen initState');
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        // O redirect do GoRouter será acionado quando o estado mudar
-        // Ou podemos navegar explicitamente se já estivermos prontos
-        // context.go('/login'); // Exemplo
-        // A lógica de redirect já lida com supabase, então aqui é só estético
+        final session = Supabase.instance.client.auth.currentSession;
+        print('DEBUG: SplashScreen timeout - session: ${session != null}');
+        if (session != null) {
+          context.go('/home');
+        } else {
+          context.go('/login');
+        }
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    print('DEBUG: SplashScreen building');
     return const Scaffold(
       body: Center(
         child: Column(

@@ -9,27 +9,39 @@ class ProfileService {
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
 
-    final response = await _supabase
-        .from('profiles')
-        .select()
-        .eq('id', user.id)
-        .single();
+    final response =
+        await _supabase.from('profiles').select().eq('id', user.id).single();
 
     return UserProfile.fromJson(response);
   }
 
-  Future<void> updateProfile(String name) async {
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? state,
+    String? city,
+  }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    await _supabase.from('profiles').update({
-      'name': name,
+    final updates = {
+      if (firstName != null) 'first_name': firstName,
+      if (lastName != null) 'last_name': lastName,
+      if (state != null) 'state': state,
+      if (city != null) 'city': city,
       'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', user.id);
-    
-    // Também atualiza o metadata do Auth para manter sincronizado se possível
-    await _supabase.auth.updateUser(UserAttributes(
-      data: {'name': name},
-    ));
+    };
+
+    await _supabase.from('profiles').update(updates).eq('id', user.id);
+
+    // Sincroniza metadata básico
+    if (firstName != null || lastName != null) {
+      await _supabase.auth.updateUser(UserAttributes(
+        data: {
+          if (firstName != null) 'first_name': firstName,
+          if (lastName != null) 'last_name': lastName,
+        },
+      ));
+    }
   }
 }

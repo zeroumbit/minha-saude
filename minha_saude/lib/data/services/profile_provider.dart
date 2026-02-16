@@ -23,14 +23,27 @@ class ProfileProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateProfile(String name) async {
+  Future<void> updateProfile({
+    String? firstName,
+    String? lastName,
+    String? state,
+    String? city,
+  }) async {
     try {
-      await _service.updateProfile(name);
+      await _service.updateProfile(
+        firstName: firstName,
+        lastName: lastName,
+        state: state,
+        city: city,
+      );
       if (_profile != null) {
         _profile = UserProfile(
           id: _profile!.id,
           email: _profile!.email,
-          name: name,
+          firstName: firstName ?? _profile!.firstName,
+          lastName: lastName ?? _profile!.lastName,
+          state: state ?? _profile!.state,
+          city: city ?? _profile!.city,
           photoUrl: _profile!.photoUrl,
         );
         notifyListeners();

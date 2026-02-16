@@ -16,6 +16,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/',
+  refreshListenable: _SupabaseAuthStateNotifier(),
   routes: [
     GoRoute(
       path: '/',
@@ -69,7 +70,7 @@ final GoRouter router = GoRouter(
     final session = Supabase.instance.client.auth.currentSession;
     final isLoggingIn = state.uri.toString() == '/login';
     final isSplash = state.uri.toString() == '/';
-    
+
     // Se não estiver logado
     if (session == null) {
       if (isSplash || isLoggingIn) return null;
@@ -84,3 +85,11 @@ final GoRouter router = GoRouter(
     return null;
   },
 );
+
+class _SupabaseAuthStateNotifier extends ChangeNotifier {
+  _SupabaseAuthStateNotifier() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      notifyListeners();
+    });
+  }
+}
