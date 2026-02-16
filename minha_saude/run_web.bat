@@ -1,0 +1,3 @@
+@echo off
+echo Iniciando Minha Saude Web na porta 5000...
+flutter run -d web-server --web-port=5000
