@@ -170,7 +170,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notificações'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => context.push('/notification-settings'),
                 ),
                 const SizedBox(height: 32),
                 TextButton(

@@ -20,6 +20,8 @@ class ProfileService {
     String? lastName,
     String? state,
     String? city,
+    int? notificationLeadTimeMinutes,
+    int? notificationIntervalMinutes,
   }) async {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
@@ -29,6 +31,10 @@ class ProfileService {
       if (lastName != null) 'last_name': lastName,
       if (state != null) 'state': state,
       if (city != null) 'city': city,
+      if (notificationLeadTimeMinutes != null)
+        'notification_lead_time_minutes': notificationLeadTimeMinutes,
+      if (notificationIntervalMinutes != null)
+        'notification_interval_minutes': notificationIntervalMinutes,
       'updated_at': DateTime.now().toIso8601String(),
     };
 

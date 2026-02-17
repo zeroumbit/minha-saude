@@ -6,6 +6,8 @@ class UserProfile {
   final String? state;
   final String? city;
   final String? photoUrl;
+  final int notificationLeadTimeMinutes;
+  final int notificationIntervalMinutes;
 
   UserProfile({
     required this.id,
@@ -15,6 +17,8 @@ class UserProfile {
     this.state,
     this.city,
     this.photoUrl,
+    this.notificationLeadTimeMinutes = 30, // Default 30 min
+    this.notificationIntervalMinutes = 5, // Default 5 min
   });
 
   String get fullName => '${firstName ?? ''} ${lastName ?? ''}'.trim();
@@ -28,6 +32,8 @@ class UserProfile {
       state: json['state'],
       city: json['city'],
       photoUrl: json['photo_url'],
+      notificationLeadTimeMinutes: json['notification_lead_time_minutes'] ?? 30,
+      notificationIntervalMinutes: json['notification_interval_minutes'] ?? 5,
     );
   }
 
@@ -40,6 +46,8 @@ class UserProfile {
       'state': state,
       'city': city,
       'photo_url': photoUrl,
+      'notification_lead_time_minutes': notificationLeadTimeMinutes,
+      'notification_interval_minutes': notificationIntervalMinutes,
     };
   }
 }

@@ -28,6 +28,8 @@ class ProfileProvider with ChangeNotifier {
     String? lastName,
     String? state,
     String? city,
+    int? notificationLeadTimeMinutes,
+    int? notificationIntervalMinutes,
   }) async {
     try {
       await _service.updateProfile(
@@ -35,6 +37,8 @@ class ProfileProvider with ChangeNotifier {
         lastName: lastName,
         state: state,
         city: city,
+        notificationLeadTimeMinutes: notificationLeadTimeMinutes,
+        notificationIntervalMinutes: notificationIntervalMinutes,
       );
       if (_profile != null) {
         _profile = UserProfile(
@@ -45,6 +49,10 @@ class ProfileProvider with ChangeNotifier {
           state: state ?? _profile!.state,
           city: city ?? _profile!.city,
           photoUrl: _profile!.photoUrl,
+          notificationLeadTimeMinutes: notificationLeadTimeMinutes ??
+              _profile!.notificationLeadTimeMinutes,
+          notificationIntervalMinutes: notificationIntervalMinutes ??
+              _profile!.notificationIntervalMinutes,
         );
         notifyListeners();
       }

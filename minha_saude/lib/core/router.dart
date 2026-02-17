@@ -12,6 +12,7 @@ import 'package:minha_saude/ui/appointments/appointments_screen.dart';
 import 'package:minha_saude/ui/appointments/add_appointment_screen.dart';
 import 'package:minha_saude/ui/profile/profile_screen.dart';
 import 'package:minha_saude/ui/profile/care_circle_screen.dart';
+import 'package:minha_saude/ui/profile/notification_settings_screen.dart';
 import 'package:minha_saude/ui/shell/main_shell.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -126,6 +127,10 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/care-circle',
       builder: (context, state) => const CareCircleScreen(),
+    ),
+    GoRoute(
+      path: '/notification-settings',
+      builder: (context, state) => const NotificationSettingsScreen(),
     ),
   ],
   redirect: (context, state) {
