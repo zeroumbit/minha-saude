@@ -6,7 +6,9 @@ import 'package:intl/intl.dart';
 
 import 'package:minha_saude/data/services/medication_provider.dart';
 import 'package:minha_saude/data/services/profile_provider.dart';
+import 'package:minha_saude/data/services/empresa_provider.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
+import 'package:minha_saude/data/models/empresa_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,6 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MedicationProvider>().loadMedications();
       context.read<ProfileProvider>().loadProfile();
+      context.read<EmpresaProvider>().loadEmpresas();
     });
   }
 
@@ -42,10 +45,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Consumer2<MedicationProvider, ProfileProvider>(
-        builder: (context, medProvider, profileProvider, child) {
+      body: Consumer3<MedicationProvider, ProfileProvider, EmpresaProvider>(
+        builder: (context, medProvider, profileProvider, empProvider, child) {
           if ((medProvider.isLoading && medProvider.medications.isEmpty) ||
-              profileProvider.isLoading) {
+              profileProvider.isLoading ||
+              (empProvider.isLoading && empProvider.empresas.isEmpty)) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -58,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
               await Future.wait([
                 medProvider.loadMedications(),
                 profileProvider.loadProfile(),
+                empProvider.loadEmpresas(),
               ]);
             },
             child: SingleChildScrollView(
@@ -83,6 +88,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+                  if (empProvider.empresas.isNotEmpty) ...[
+                    _buildAdvertisersSection(context, empProvider.empresas),
+                    const SizedBox(height: 32),
+                  ],
                   Text(
                     'Aqui está o resumo do seu dia.',
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -103,13 +112,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 16,
+                    alignment: WrapAlignment.center,
                     children: [
                       _buildQuickAccessButton(context, Icons.medication,
                           'Remédios', () => context.push('/medications')),
                       _buildQuickAccessButton(context, Icons.calendar_month,
                           'Consultas', () => context.push('/appointments')),
+                      _buildQuickAccessButton(context, Icons.medical_services,
+                          'Serviços', () => context.push('/services')),
                       _buildQuickAccessButton(context, Icons.person, 'Perfil',
                           () => context.push('/profile')),
                     ],
@@ -264,6 +277,98 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAdvertisersSection(
+      BuildContext context, List<Empresa> empresas) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Anunciantes em Destaque',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 160,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: empresas.length,
+            itemBuilder: (context, index) {
+              final empresa = empresas[index];
+              return _buildAdvertiserCard(context, empresa);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdvertiserCard(BuildContext context, Empresa empresa) {
+    return Container(
+      width: 140,
+      margin: const EdgeInsets.only(right: 16),
+      child: InkWell(
+        onTap: () {
+          // Future: Navigate to company details
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Empresa: ${empresa.nome}')),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: empresa.logoUrl != null
+                    ? Image.network(
+                        empresa.logoUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          Icons.business,
+                          size: 40,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      )
+                    : Icon(
+                        Icons.business,
+                        size: 40,
+                        color: Theme.of(context).primaryColor,
+                      ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              empresa.nome,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

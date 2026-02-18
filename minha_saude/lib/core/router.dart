@@ -13,14 +13,15 @@ import 'package:minha_saude/ui/appointments/add_appointment_screen.dart';
 import 'package:minha_saude/ui/profile/profile_screen.dart';
 import 'package:minha_saude/ui/profile/care_circle_screen.dart';
 import 'package:minha_saude/ui/profile/notification_settings_screen.dart';
+import 'package:minha_saude/ui/services/service_list_screen.dart';
 import 'package:minha_saude/ui/shell/main_shell.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
 import 'package:minha_saude/data/models/appointment_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final GoRouter router = GoRouter(
-  initialLocation: '/',
-  refreshListenable: _SupabaseAuthStateNotifier(),
+  initialLocation: '/login',
+  // refreshListenable: _SupabaseAuthStateNotifier(),
   routes: [
     GoRoute(
       path: '/',
@@ -135,31 +136,47 @@ final GoRouter router = GoRouter(
       path: '/notification-settings',
       builder: (context, state) => const NotificationSettingsScreen(),
     ),
+    GoRoute(
+      path: '/services',
+      builder: (context, state) => const ServiceListScreen(),
+    ),
   ],
   redirect: (context, state) {
     final session = Supabase.instance.client.auth.currentSession;
-    final isLoggingIn = state.uri.toString() == '/login';
-    final isSplash = state.uri.toString() == '/';
+    final isLoggingIn = state.uri.path == '/login';
+    final isSplash = state.uri.path == '/';
 
-    // Se não estiver logado
+    debugPrint(
+        'DEBUG: Redirect check - Path: ${state.uri.path}, Session: ${session != null}');
+
     if (session == null) {
-      if (isSplash || isLoggingIn) return null;
+      if (isLoggingIn || isSplash) {
+        debugPrint('DEBUG: Not logged in, staying at ${state.uri.path}');
+        return null;
+      }
+      debugPrint('DEBUG: Not logged in, redirecting to /login');
       return '/login';
     }
 
-    // Se estiver logado
     if (isLoggingIn || isSplash) {
+      debugPrint('DEBUG: Logged in, redirecting to /home');
       return '/home';
     }
 
+    debugPrint('DEBUG: Logged in, staying at ${state.uri.path}');
     return null;
   },
 );
 
 class _SupabaseAuthStateNotifier extends ChangeNotifier {
+  AuthChangeEvent? _lastEvent;
   _SupabaseAuthStateNotifier() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      notifyListeners();
+      if (data.event != _lastEvent) {
+        debugPrint('DEBUG: AuthStateChange event: ${data.event}');
+        _lastEvent = data.event;
+        notifyListeners();
+      }
     });
   }
 }

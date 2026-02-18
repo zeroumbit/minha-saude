@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart'; // ignore: unused_import
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -37,7 +37,6 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    // ... (rest of the code)
     try {
       final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
@@ -46,9 +45,11 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao selecionar imagem: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao selecionar imagem: $e')),
+        );
+      }
     }
   }
 
@@ -139,32 +140,44 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!),
-                    image: _selectedImage != null
-                        ? DecorationImage(
-                            image: FileImage(File(_selectedImage!.path)),
-                            fit: BoxFit.cover,
-                          )
-                        : (widget.prescription?['image_url'] != null
-                            ? DecorationImage(
-                                image: NetworkImage(
-                                    widget.prescription!['image_url']),
-                                fit: BoxFit.cover,
-                              )
-                            : null),
                   ),
-                  child: (_selectedImage == null &&
-                          widget.prescription?['image_url'] == null)
-                      ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_a_photo,
-                                size: 40, color: Colors.grey),
-                            SizedBox(height: 8),
-                            Text('Adicionar Foto',
-                                style: TextStyle(color: Colors.grey)),
-                          ],
+                  child: _selectedImage != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: FutureBuilder<Uint8List>(
+                            future: _selectedImage!.readAsBytes(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData) {
+                                return Image.memory(snapshot.data!,
+                                    fit: BoxFit.cover,
+                                    width: double.infinity,
+                                    height: 200);
+                              }
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            },
+                          ),
                         )
-                      : null,
+                      : (widget.prescription?['image_url'] != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                widget.prescription!['image_url'],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: 200,
+                              ),
+                            )
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.add_a_photo,
+                                    size: 40, color: Colors.grey),
+                                SizedBox(height: 8),
+                                Text('Adicionar Foto',
+                                    style: TextStyle(color: Colors.grey)),
+                              ],
+                            )),
                 ),
               ),
               const SizedBox(height: 24),

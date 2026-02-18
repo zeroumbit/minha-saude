@@ -8,20 +8,25 @@ import 'package:minha_saude/data/services/appointment_provider.dart';
 import 'package:minha_saude/data/services/profile_provider.dart';
 import 'package:minha_saude/data/services/prescription_provider.dart';
 import 'package:minha_saude/data/services/care_circle_provider.dart';
+import 'package:minha_saude/data/services/servico_provider.dart';
+import 'package:minha_saude/data/services/empresa_provider.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('DEBUG: WidgetsFlutterBinding initialized');
 
   await initializeDateFormatting('pt_BR', null);
+  debugPrint('DEBUG: Date formatting initialized');
 
   await Supabase.initialize(
     url: 'https://kijqhifkreohdqetcnyl.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpanFoaWZrcmVvaGRxZXRjbnlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExOTE0OTksImV4cCI6MjA4Njc2NzQ5OX0.F2JjKFz9hK4i4mXDb-VUTiATC9gub-KhNlrRAagcI-I',
   );
+  debugPrint('DEBUG: Supabase initialized');
 
   runApp(
     MultiProvider(
@@ -31,6 +36,8 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => PrescriptionProvider()),
         ChangeNotifierProvider(create: (_) => CareCircleProvider()),
+        ChangeNotifierProvider(create: (_) => ServicoProvider()),
+        ChangeNotifierProvider(create: (_) => EmpresaProvider()),
       ],
       child: const MyApp(),
     ),

@@ -11,15 +11,19 @@ class ProfileProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   Future<void> loadProfile() async {
+    debugPrint('DEBUG: ProfileProvider loadProfile start');
     _isLoading = true;
     notifyListeners();
     try {
       _profile = await _service.getProfile();
+      debugPrint(
+          'DEBUG: ProfileProvider loadProfile success: ${_profile?.firstName}');
     } catch (e) {
-      debugPrint('Error loading profile: $e');
+      debugPrint('DEBUG: ProfileProvider loadProfile error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
+      debugPrint('DEBUG: ProfileProvider loadProfile end');
     }
   }
 

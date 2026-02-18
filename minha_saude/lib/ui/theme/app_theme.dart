@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+// import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primaryColor = Color(0xFF0A0AC2);
@@ -19,13 +19,13 @@ class AppTheme {
         error: errorColor,
       ),
       scaffoldBackgroundColor: backgroundColor,
-      textTheme: GoogleFonts.lexendTextTheme(),
-      appBarTheme: AppBarTheme(
+      // textTheme: GoogleFonts.lexendTextTheme(), // Temporariamente desativado para teste
+      appBarTheme: const AppBarTheme(
         backgroundColor: backgroundColor,
-        foregroundColor: Colors.black, // Ícones e texto da AppBar em preto
+        foregroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.lexend(
+        titleTextStyle: TextStyle(
           color: Colors.black,
           fontSize: 20,
           fontWeight: FontWeight.w600,
@@ -57,7 +57,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          textStyle: GoogleFonts.lexend(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
