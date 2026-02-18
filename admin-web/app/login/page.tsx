@@ -3,18 +3,57 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useAuthStore } from '@/lib/stores/auth-store'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Building2 } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
+  const { setEmpresa, setEmpresaUsuario, setUser } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
+
+  const loadEmpresa = async (userId: string) => {
+    try {
+      const supabase = createClient()
+      
+      // Carregar vínculo do usuário com a empresa
+      const { data: empresaUsuario, error: euError } = await supabase
+        .from('empresa_usuarios')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
+
+      if (euError) {
+        console.error('Erro ao carregar empresa_usuario:', euError)
+        return
+      }
+
+      if (empresaUsuario) {
+        setEmpresaUsuario(empresaUsuario)
+        
+        // Carregar dados da empresa
+        const { data: empresa, error: empresaError } = await supabase
+          .from('empresas')
+          .select('*')
+          .eq('id', empresaUsuario.empresa_id)
+          .single()
+
+        if (empresaError) {
+          console.error('Erro ao carregar empresa:', empresaError)
+        } else if (empresa) {
+          setEmpresa(empresa)
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados da empresa:', error)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,7 +62,7 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-      
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -32,6 +71,23 @@ export default function LoginPage() {
       if (signInError) throw signInError
 
       if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+
+        setUser({
+          id: data.user.id,
+          email: data.user.email || '',
+          first_name: profile?.first_name || '',
+          last_name: profile?.last_name || '',
+          created_at: data.user.created_at || ''
+        })
+
+        // Carregar dados da empresa
+        await loadEmpresa(data.user.id)
+        
         router.push('/dashboard')
         router.refresh()
       }

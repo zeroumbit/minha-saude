@@ -130,6 +130,11 @@ class _PrescriptionsScreenState extends State<PrescriptionsScreen> {
                             ),
                         ],
                       ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.edit_outlined),
+                        onPressed: () => context.push('/prescriptions/add',
+                            extra: prescription),
+                      ),
                       isThreeLine: true,
                     ),
                   ),

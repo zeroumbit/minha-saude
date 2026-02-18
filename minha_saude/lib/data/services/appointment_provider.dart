@@ -33,6 +33,16 @@ class AppointmentProvider with ChangeNotifier {
     }
   }
 
+  Future<void> editAppointment(Appointment appointment) async {
+    try {
+      await _service.updateAppointment(appointment);
+      await loadAppointments();
+    } catch (e) {
+      debugPrint('Error editing appointment: $e');
+      rethrow;
+    }
+  }
+
   Future<void> deleteAppointment(String id) async {
     try {
       await _service.deleteAppointment(id);
@@ -40,6 +50,7 @@ class AppointmentProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error deleting appointment: $e');
+      rethrow;
     }
   }
 }

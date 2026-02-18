@@ -14,11 +14,20 @@ class AppointmentService {
         .eq('user_id', user.id)
         .order('date_time', ascending: true);
 
-    return (response as List).map((json) => Appointment.fromJson(json)).toList();
+    return (response as List)
+        .map((json) => Appointment.fromJson(json))
+        .toList();
   }
 
   Future<void> addAppointment(Appointment appointment) async {
     await _supabase.from('appointments').insert(appointment.toJson());
+  }
+
+  Future<void> updateAppointment(Appointment appointment) async {
+    await _supabase
+        .from('appointments')
+        .update(appointment.toJson())
+        .match({'id': appointment.id!});
   }
 
   Future<void> deleteAppointment(String id) async {

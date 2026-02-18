@@ -12,8 +12,10 @@ import { useAuthStore } from '@/lib/stores/auth-store'
 
 // Extensão do tipo para incluir dados do user (join)
 interface EmpresaUsuarioComDetalhes extends EmpresaUsuario {
-  users: {
-    email: string
+  perfil: {
+    first_name: string | null
+    last_name: string | null
+    email: string | null
   } | null
 }
 
@@ -32,48 +34,49 @@ export default function EquipePage() {
     try {
       const supabase = createClient()
       
-      // Busca membros da empresa e seus emails da tabela auth.users (precisa de view ou RPC se não tiver acesso direto,
-      // mas vamos assumir que a tabela empresa_usuarios tem o user_id e vamos tentar buscar o email.
-      // Nota: O acesso direto a auth.users via client-side geralmente é bloqueado por segurança.
-      // O ideal é ter uma view pública ou function secure.
-      // Vou usar uma abordagem alternativa: listar apenas os registros da tabela empresa_usuarios por enquanto,
-      // e assumir que talvez precisemos de uma RPC `get_empresa_members` no futuro.
-      // POR AGORA: Vou tentar fazer o fetch simples e se falhar no email, mostro o ID ou "Usuário".
-      
+      // Busca membros da empresa e seus dados de perfil
+      // Nota: Agora estamos fazendo join com 'profiles' (apelidado de 'perfil')
+      // A chave estrangeira deve estar configurada no banco (conforme fix_equipe_schema.sql)
       const { data, error } = await supabase
         .from('empresa_usuarios')
         .select(`
           *,
-          user:user_id (
+          perfil:profiles (
+            first_name,
+            last_name,
             email
           )
-        `) // Isso requer uma FK configurada corretamente e permissão de leitura.
-           // Se user_id referencia auth.users, o PostgREST normalmente não deixa fazer join direto com auth.users por segurança.
-           // O padrão é criar uma VIEW "public_profiles" ou similar.
-           // Vou listar sem o email por enquanto se o join falhar, mas deixarei o código preparado.
+        `)
         .eq('empresa_id', empresa.id)
         .order('created_at', { ascending: true })
 
       if (error) {
-        console.warn('Erro ao carregar detalhes do usuário (possível restrição de segurança):', error)
-        // Fallback: carregar apenas os dados da tabela de ligação
-         const { data: simpleData, error: simpleError } = await supabase
-            .from('empresa_usuarios')
-            .select('*')
-            .eq('empresa_id', empresa.id)
+        console.warn('Erro ao carregar detalhes via Join (PostgREST Relationship Error):', error)
         
-         if (simpleError) throw simpleError
-         setMembros(simpleData as any)
-      } else {
-         // Mapear user.email se o join funcionou (o supabase retorna arrays ou objetos dependendo da relação)
-         // O tipo retornado pelo supabase client precisa ser tratado
-         const formattedData = data.map((item: any) => ({
-             ...item,
-             users: item.user // Renomeando para bater com a interface
-         }))
-         setMembros(formattedData)
-      }
+        // Fallback: carregar apenas os dados da tabela de ligação se o join falhar
+        const { data: simpleData, error: simpleError } = await supabase
+          .from('empresa_usuarios')
+          .select('*')
+          .eq('empresa_id', empresa.id)
+        
+        if (simpleError) throw simpleError
+        
+        // Busca perfis separadamente se o join falhou (abordagem alternativa)
+        const userIds = simpleData.map(d => d.user_id)
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email')
+          .in('id', userIds)
 
+        const combined = simpleData.map(member => ({
+          ...member,
+          perfil: profilesData?.find(p => p.id === member.user_id) || null
+        }))
+
+        setMembros(combined as any)
+      } else {
+        setMembros(data as any)
+      }
     } catch (error) {
       console.error('Erro ao carregar equipe:', error)
     } finally {
@@ -135,8 +138,13 @@ export default function EquipePage() {
                     </div>
                     <div>
                       <p className="font-medium text-slate-900">
-                        {membro.users?.email || 'Usuário do Sistema'}
+                        {membro.perfil?.first_name 
+                          ? `${membro.perfil.first_name} ${membro.perfil.last_name || ''}`
+                          : membro.perfil?.email || 'Usuário do Sistema'}
                       </p>
+                      {membro.perfil?.first_name && (
+                        <p className="text-xs text-slate-500">{membro.perfil.email}</p>
+                      )}
                       <p className="text-xs text-slate-500 flex items-center gap-1">
                         <Shield className="w-3 h-3" />
                         ID: {membro.user_id.slice(0, 8)}...

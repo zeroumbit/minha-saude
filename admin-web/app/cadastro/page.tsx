@@ -18,9 +18,14 @@ export default function CadastroPage() {
     nome_fantasia: '',
     razao_social: '',
     cnpj: '',
+    email_financeiro: '',
     telefone: '',
-    
+    site: '',
+    descricao: '',
+
     // Step 2: Dados do Responsável
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -49,6 +54,12 @@ export default function CadastroPage() {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+          }
+        }
       })
 
       if (signUpError) throw signUpError
@@ -61,7 +72,10 @@ export default function CadastroPage() {
           nome_fantasia: formData.nome_fantasia,
           razao_social: formData.razao_social || null,
           cnpj: formData.cnpj || null,
+          email_financeiro: formData.email_financeiro || null,
           telefone: formData.telefone || null,
+          site: formData.site || null,
+          descricao: formData.descricao || null,
           status: 'ACTIVE',
           origin: 'SELF_SIGNUP',
         })
@@ -162,6 +176,32 @@ export default function CadastroPage() {
                   />
                 </div>
 
+                <Input
+                  label="E-mail Financeiro"
+                  placeholder="financeiro@empresa.com"
+                  type="email"
+                  value={formData.email_financeiro}
+                  onChange={(e) => setFormData({ ...formData, email_financeiro: e.target.value })}
+                />
+
+                <Input
+                  label="Site"
+                  placeholder="https://www.suaempresa.com.br"
+                  value={formData.site}
+                  onChange={(e) => setFormData({ ...formData, site: e.target.value })}
+                />
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Descrição</label>
+                  <textarea
+                    className="input w-full"
+                    rows={3}
+                    placeholder="Breve descrição sobre sua empresa..."
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  />
+                </div>
+
                 <Button
                   type="button"
                   variant="primary"
@@ -178,6 +218,23 @@ export default function CadastroPage() {
             {step === 2 && (
               <div className="space-y-4 animate-fade-in">
                 <h2 className="text-xl font-bold text-slate-900 mb-4">Dados do Responsável</h2>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <Input
+                    label="Nome *"
+                    placeholder="Seu nome"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    required
+                  />
+                  <Input
+                    label="Sobrenome *"
+                    placeholder="Seu sobrenome"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    required
+                  />
+                </div>
 
                 <Input
                   type="email"

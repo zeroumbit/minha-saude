@@ -7,7 +7,8 @@ import 'package:minha_saude/data/services/prescription_provider.dart';
 import 'package:provider/provider.dart';
 
 class AddPrescriptionScreen extends StatefulWidget {
-  const AddPrescriptionScreen({super.key});
+  final Map<String, dynamic>? prescription;
+  const AddPrescriptionScreen({super.key, this.prescription});
 
   @override
   State<AddPrescriptionScreen> createState() => _AddPrescriptionScreenState();
@@ -22,7 +23,21 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
   XFile? _selectedImage;
   final _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.prescription != null) {
+      _titleController.text = widget.prescription!['title'] ?? '';
+      _doctorController.text = widget.prescription!['doctor_name'] ?? '';
+      _notesController.text = widget.prescription!['notes'] ?? '';
+      if (widget.prescription!['issue_date'] != null) {
+        _issueDate = DateTime.parse(widget.prescription!['issue_date']);
+      }
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
+    // ... (rest of the code)
     try {
       final pickedFile = await _picker.pickImage(source: source);
       if (pickedFile != null) {
@@ -41,13 +56,25 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      await context.read<PrescriptionProvider>().addPrescription(
-            title: _titleController.text.trim(),
-            doctorName: _doctorController.text.trim(),
-            issueDate: _issueDate,
-            image: _selectedImage,
-            notes: _notesController.text.trim(),
-          );
+      if (widget.prescription != null) {
+        await context.read<PrescriptionProvider>().editPrescription(
+              id: widget.prescription!['id'],
+              title: _titleController.text.trim(),
+              doctorName: _doctorController.text.trim(),
+              issueDate: _issueDate,
+              image: _selectedImage,
+              oldImageUrl: widget.prescription!['image_url'],
+              notes: _notesController.text.trim(),
+            );
+      } else {
+        await context.read<PrescriptionProvider>().addPrescription(
+              title: _titleController.text.trim(),
+              doctorName: _doctorController.text.trim(),
+              issueDate: _issueDate,
+              image: _selectedImage,
+              notes: _notesController.text.trim(),
+            );
+      }
 
       if (mounted) {
         context.pop();
@@ -67,7 +94,9 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova Receita')),
+      appBar: AppBar(
+          title: Text(
+              widget.prescription != null ? 'Editar Receita' : 'Nova Receita')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -115,9 +144,16 @@ class _AddPrescriptionScreenState extends State<AddPrescriptionScreen> {
                             image: FileImage(File(_selectedImage!.path)),
                             fit: BoxFit.cover,
                           )
-                        : null,
+                        : (widget.prescription?['image_url'] != null
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                    widget.prescription!['image_url']),
+                                fit: BoxFit.cover,
+                              )
+                            : null),
                   ),
-                  child: _selectedImage == null
+                  child: (_selectedImage == null &&
+                          widget.prescription?['image_url'] == null)
                       ? const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

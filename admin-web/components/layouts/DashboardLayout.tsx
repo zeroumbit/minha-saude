@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
 import {
   LayoutDashboard,
   Building2,
@@ -13,9 +13,11 @@ import {
   Menu,
   X,
   MapPin,
+  User,
 } from 'lucide-react'
-import { useState } from 'react'
 import { useAuthStore } from '@/lib/stores/auth-store'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -27,12 +29,85 @@ const navigation = [
   { name: 'Equipe', href: '/dashboard/equipe', icon: Users },
   { name: 'Assinatura', href: '/dashboard/assinatura', icon: CreditCard },
   { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
+  { name: 'Perfil', href: '/dashboard/perfil', icon: User },
 ]
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
-  const { empresa, user } = useAuthStore()
+  const router = useRouter()
+  const { empresa, user, clear, setEmpresa, setEmpresaUsuario, setUser } = useAuthStore()
+  const [isInitializing, setIsInitializing] = useState(true)
+
+  // Carregar sessão ao montar componente
+  useEffect(() => {
+    const initializeAuth = async () => {
+      try {
+        const supabase = createClient()
+        
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // Carregar perfil do usuário
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single()
+
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            first_name: profile?.first_name || '',
+            last_name: profile?.last_name || '',
+            created_at: session.user.created_at || ''
+          })
+
+          // Carregar dados da empresa
+          const { data: empresaUsuario, error: euError } = await supabase
+            .from('empresa_usuarios')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single()
+
+          if (euError) {
+            console.error('Erro ao carregar empresa_usuario:', euError)
+          } else if (empresaUsuario) {
+            setEmpresaUsuario(empresaUsuario)
+            
+            const { data: empresaData, error: empresaError } = await supabase
+              .from('empresas')
+              .select('*')
+              .eq('id', empresaUsuario.empresa_id)
+              .single()
+
+            if (empresaError) {
+              console.error('Erro ao carregar empresa:', empresaError)
+            } else if (empresaData) {
+              setEmpresa(empresaData)
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar auth:', error)
+      } finally {
+        setIsInitializing(false)
+      }
+    }
+
+    initializeAuth()
+  }, [setUser, setEmpresa, setEmpresaUsuario])
+
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      clear()
+      router.push('/login')
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error)
+    }
+  }
 
   return (
     <div className="flex h-screen bg-slate-50">
@@ -114,7 +189,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           )}
           
-          <button className="flex items-center gap-3 w-full px-4 py-3 text-danger-600 hover:bg-danger-50 rounded-lg font-medium transition-all duration-200">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 w-full px-4 py-3 text-danger-600 hover:bg-danger-50 rounded-lg font-medium transition-all duration-200"
+          >
             <LogOut className="w-5 h-5" />
             <span>Sair</span>
           </button>

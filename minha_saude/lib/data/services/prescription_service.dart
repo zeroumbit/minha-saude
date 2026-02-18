@@ -63,11 +63,62 @@ class PrescriptionService {
     });
   }
 
+  Future<void> updatePrescription({
+    required String id,
+    required String title,
+    String? doctorName,
+    DateTime? issueDate,
+    XFile? image,
+    String? oldImageUrl,
+    String? notes,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    String? imageUrl = oldImageUrl;
+
+    if (image != null) {
+      // If there's a new image, delete the old one if it exists
+      if (oldImageUrl != null) {
+        try {
+          final uri = Uri.parse(oldImageUrl);
+          final path = uri.pathSegments
+              .sublist(uri.pathSegments.indexOf('prescriptions') + 1)
+              .join('/');
+          await _supabase.storage.from('prescriptions').remove([path]);
+        } catch (e) {
+          debugPrint('Error deleting old image: $e');
+        }
+      }
+
+      final fileExtension = image.path.split('.').last;
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}.$fileExtension';
+      final filePath = '${user.id}/$fileName';
+
+      final bytes = await image.readAsBytes();
+      await _supabase.storage.from('prescriptions').uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+          );
+
+      imageUrl = _supabase.storage.from('prescriptions').getPublicUrl(filePath);
+    }
+
+    await _supabase.from('prescriptions').update({
+      'title': title,
+      'doctor_name': doctorName,
+      'issue_date': issueDate?.toIso8601String(),
+      'image_url': imageUrl,
+      'notes': notes,
+    }).eq('id', id);
+  }
+
   Future<void> deletePrescription(String id, String? imageUrl) async {
     await _supabase.from('prescriptions').delete().eq('id', id);
 
     if (imageUrl != null) {
-      // Logic to delete from storage if needed
       try {
         final uri = Uri.parse(imageUrl);
         final path = uri.pathSegments

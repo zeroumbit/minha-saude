@@ -50,6 +50,37 @@ class PrescriptionProvider with ChangeNotifier {
     }
   }
 
+  Future<void> editPrescription({
+    required String id,
+    required String title,
+    String? doctorName,
+    DateTime? issueDate,
+    XFile? image,
+    String? oldImageUrl,
+    String? notes,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      await _service.updatePrescription(
+        id: id,
+        title: title,
+        doctorName: doctorName,
+        issueDate: issueDate,
+        image: image,
+        oldImageUrl: oldImageUrl,
+        notes: notes,
+      );
+      await loadPrescriptions();
+    } catch (e) {
+      debugPrint('Error editing prescription: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> deletePrescription(String id, String? imageUrl) async {
     try {
       await _service.deletePrescription(id, imageUrl);
@@ -57,6 +88,7 @@ class PrescriptionProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Error deleting prescription: $e');
+      rethrow;
     }
   }
 }

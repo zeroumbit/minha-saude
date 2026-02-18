@@ -137,6 +137,52 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
                 Text(appointment.location),
               ],
             ),
+            const Divider(height: 32),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton.icon(
+                  onPressed: () =>
+                      context.push('/add-appointment', extra: appointment),
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Editar'),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Excluir Consulta'),
+                        content: const Text(
+                            'Tem certeza que deseja remover este agendamento?'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text('Cancelar'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text('Excluir',
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true && context.mounted) {
+                      context
+                          .read<AppointmentProvider>()
+                          .deleteAppointment(appointment.id!);
+                    }
+                  },
+                  icon: const Icon(Icons.delete_outline,
+                      size: 18, color: Colors.red),
+                  label: const Text('Excluir',
+                      style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
           ],
         ),
       ),

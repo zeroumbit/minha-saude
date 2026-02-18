@@ -15,6 +15,7 @@ import 'package:minha_saude/ui/profile/care_circle_screen.dart';
 import 'package:minha_saude/ui/profile/notification_settings_screen.dart';
 import 'package:minha_saude/ui/shell/main_shell.dart';
 import 'package:minha_saude/data/models/medication_model.dart';
+import 'package:minha_saude/data/models/appointment_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final GoRouter router = GoRouter(
@@ -70,7 +71,8 @@ final GoRouter router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'add',
-                  builder: (context, state) => const AddAppointmentScreen(),
+                  builder: (context, state) => AddAppointmentScreen(
+                      appointment: state.extra as Appointment?),
                 ),
               ],
             ),
@@ -85,7 +87,8 @@ final GoRouter router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'add',
-                  builder: (context, state) => const AddPrescriptionScreen(),
+                  builder: (context, state) => AddPrescriptionScreen(
+                      prescription: state.extra as Map<String, dynamic>?),
                 ),
               ],
             ),
