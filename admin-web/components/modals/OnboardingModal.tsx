@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { Building2, User, MapPin, Phone, Instagram, Globe, Mail, CheckCircle2, Loader2 } from 'lucide-react'
 import { fetchStates, fetchCitiesByState, fetchAddressByCep, State, City } from '@/lib/location'
+import { masks, validators } from '@/lib/validation'
 
 export function OnboardingModal() {
   const { empresa, user, setEmpresa, setUser } = useAuthStore()
@@ -16,6 +17,7 @@ export function OnboardingModal() {
   const [step, setStep] = useState(1)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   
   const [states, setStates] = useState<State[]>([])
   const [cities, setCities] = useState<City[]>([])
@@ -125,8 +127,68 @@ export function OnboardingModal() {
 
   const handleSave = async () => {
     if (!empresa || !user) return
-    setIsSaving(true)
     setError('')
+    setFieldErrors({})
+
+    // Validar campos
+    let hasError = false
+
+    // Step 1: SAC
+    if (formData.whatsapp && !validators.celular(formData.whatsapp)) {
+      setFieldErrors(prev => ({ ...prev, whatsapp: 'WhatsApp inválido' }))
+      hasError = true
+    }
+
+    if (formData.telefone && !validators.telefoneCelular(formData.telefone)) {
+      setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
+      hasError = true
+    }
+
+    if (formData.email_sac && !validators.email(formData.email_sac)) {
+      setFieldErrors(prev => ({ ...prev, email_sac: 'E-mail inválido' }))
+      hasError = true
+    }
+
+    if (formData.site && !validators.url(formData.site)) {
+      setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
+      hasError = true
+    }
+
+    if (formData.instagram && !validators.instagram(formData.instagram)) {
+      setFieldErrors(prev => ({ ...prev, instagram: 'Instagram inválido' }))
+      hasError = true
+    }
+
+    // Step 2: Endereço
+    if (formData.cep && !validators.cep(formData.cep)) {
+      setFieldErrors(prev => ({ ...prev, cep: 'CEP inválido' }))
+      hasError = true
+    }
+
+    if (!formData.cidade_ibge_id) {
+      setFieldErrors(prev => ({ ...prev, cidade_ibge_id: 'Cidade é obrigatória' }))
+      hasError = true
+    }
+
+    // Step 3: Responsável
+    if (!formData.firstName?.trim()) {
+      setFieldErrors(prev => ({ ...prev, firstName: 'Nome é obrigatório' }))
+      hasError = true
+    }
+
+    if (formData.email_contato && !validators.email(formData.email_contato)) {
+      setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail inválido' }))
+      hasError = true
+    }
+
+    if (formData.telefone_contato && !validators.telefoneCelular(formData.telefone_contato)) {
+      setFieldErrors(prev => ({ ...prev, telefone_contato: 'Telefone inválido' }))
+      hasError = true
+    }
+
+    if (hasError) return
+
+    setIsSaving(true)
 
     try {
       const supabase = createClient()
@@ -169,7 +231,7 @@ export function OnboardingModal() {
       // 3. Atualizar Store Local
       const { data: updatedEmpresa } = await supabase.from('empresas').select('*').eq('id', empresa.id).single()
       if (updatedEmpresa) setEmpresa(updatedEmpresa)
-      
+
       setUser({
         ...user,
         first_name: formData.firstName,
@@ -182,6 +244,83 @@ export function OnboardingModal() {
       setError(err.message || 'Erro ao salvar informações')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleNextStep = () => {
+    setError('')
+    setFieldErrors({})
+    let hasError = false
+
+    if (step === 1) {
+      // Validar Step 1: SAC
+      if (formData.whatsapp && !validators.celular(formData.whatsapp)) {
+        setFieldErrors(prev => ({ ...prev, whatsapp: 'WhatsApp inválido' }))
+        hasError = true
+      }
+
+      if (formData.telefone && !validators.telefoneCelular(formData.telefone)) {
+        setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
+        hasError = true
+      }
+
+      if (formData.email_sac && !validators.email(formData.email_sac)) {
+        setFieldErrors(prev => ({ ...prev, email_sac: 'E-mail inválido' }))
+        hasError = true
+      }
+
+      if (formData.site && !validators.url(formData.site)) {
+        setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
+        hasError = true
+      }
+
+      if (formData.instagram && !validators.instagram(formData.instagram)) {
+        setFieldErrors(prev => ({ ...prev, instagram: 'Instagram inválido' }))
+        hasError = true
+      }
+    }
+
+    if (step === 2) {
+      // Validar Step 2: Endereço
+      if (formData.cep && !validators.cep(formData.cep)) {
+        setFieldErrors(prev => ({ ...prev, cep: 'CEP inválido' }))
+        hasError = true
+      }
+
+      if (!formData.cidade_ibge_id) {
+        setFieldErrors(prev => ({ ...prev, cidade_ibge_id: 'Cidade é obrigatória' }))
+        hasError = true
+      }
+
+      if (!formData.numero?.trim()) {
+        setFieldErrors(prev => ({ ...prev, numero: 'Número é obrigatório' }))
+        hasError = true
+      }
+    }
+
+    if (step === 3) {
+      // Validar Step 3: Responsável
+      if (!formData.firstName?.trim()) {
+        setFieldErrors(prev => ({ ...prev, firstName: 'Nome é obrigatório' }))
+        hasError = true
+      }
+
+      if (!formData.email_contato?.trim()) {
+        setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail é obrigatório' }))
+        hasError = true
+      } else if (!validators.email(formData.email_contato)) {
+        setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail inválido' }))
+        hasError = true
+      }
+
+      if (formData.telefone_contato && !validators.telefoneCelular(formData.telefone_contato)) {
+        setFieldErrors(prev => ({ ...prev, telefone_contato: 'Telefone inválido' }))
+        hasError = true
+      }
+    }
+
+    if (!hasError) {
+      setStep(step + 1)
     }
   }
 
@@ -224,13 +363,71 @@ export function OnboardingModal() {
                   Informações de SAC (Público)
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="WhatsApp" value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} placeholder="(00) 00000-0000" />
-                  <Input label="Telefone Fixo" value={formData.telefone} onChange={e => setFormData({...formData, telefone: e.target.value})} placeholder="(00) 0000-0000" />
+                  <Input
+                    label="WhatsApp"
+                    mask="celular"
+                    value={formData.whatsapp}
+                    onChange={(e) => {
+                      setFormData({...formData, whatsapp: e.target.value})
+                      if (fieldErrors.whatsapp && validators.celular(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, whatsapp: '' }))
+                      }
+                    }}
+                    error={fieldErrors.whatsapp}
+                    placeholder="(00) 00000-0000"
+                  />
+                  <Input
+                    label="Telefone Fixo"
+                    mask="telefone"
+                    value={formData.telefone}
+                    onChange={(e) => {
+                      setFormData({...formData, telefone: e.target.value})
+                      if (fieldErrors.telefone && validators.telefoneCelular(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, telefone: '' }))
+                      }
+                    }}
+                    error={fieldErrors.telefone}
+                    placeholder="(00) 0000-0000"
+                  />
                 </div>
-                <Input label="E-mail de Atendimento" value={formData.email_sac} onChange={e => setFormData({...formData, email_sac: e.target.value})} placeholder="sac@suaempresa.com" />
+                <Input
+                  label="E-mail de Atendimento"
+                  type="email"
+                  value={formData.email_sac}
+                  onChange={(e) => {
+                    setFormData({...formData, email_sac: e.target.value})
+                    if (fieldErrors.email_sac && validators.email(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, email_sac: '' }))
+                    }
+                  }}
+                  error={fieldErrors.email_sac}
+                  placeholder="sac@suaempresa.com"
+                />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Input label="Site" value={formData.site} onChange={e => setFormData({...formData, site: e.target.value})} placeholder="www.suaempresa.com" />
-                  <Input label="Instagram" value={formData.instagram} onChange={e => setFormData({...formData, instagram: e.target.value})} placeholder="@suaempresa" />
+                  <Input
+                    label="Site"
+                    value={formData.site}
+                    onChange={(e) => {
+                      setFormData({...formData, site: e.target.value})
+                      if (fieldErrors.site && validators.url(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, site: '' }))
+                      }
+                    }}
+                    error={fieldErrors.site}
+                    placeholder="www.suaempresa.com"
+                  />
+                  <Input
+                    label="Instagram"
+                    value={formData.instagram}
+                    onChange={(e) => {
+                      setFormData({...formData, instagram: e.target.value})
+                      if (fieldErrors.instagram && validators.instagram(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, instagram: '' }))
+                      }
+                    }}
+                    error={fieldErrors.instagram}
+                    placeholder="@suaempresa"
+                  />
                 </div>
               </div>
             )}
@@ -242,13 +439,20 @@ export function OnboardingModal() {
                   <MapPin className="w-5 h-5 text-primary-600" />
                   Endereço Administrativo (Interno)
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="relative">
-                    <Input 
-                      label="CEP" 
-                      value={formData.cep} 
-                      onChange={e => setFormData({...formData, cep: e.target.value})} 
+                    <Input
+                      label="CEP"
+                      mask="cep"
+                      value={formData.cep}
+                      onChange={(e) => {
+                        setFormData({...formData, cep: e.target.value})
+                        if (fieldErrors.cep && validators.cep(e.target.value)) {
+                          setFieldErrors(prev => ({ ...prev, cep: '' }))
+                        }
+                      }}
+                      error={fieldErrors.cep}
                       placeholder="00000-000"
                     />
                     {isLoadingLocation && (
@@ -258,9 +462,9 @@ export function OnboardingModal() {
                     )}
                   </div>
 
-                  <Select 
-                    label="Estado" 
-                    value={formData.estado} 
+                  <Select
+                    label="Estado"
+                    value={formData.estado}
                     onChange={e => setFormData({...formData, estado: e.target.value})}
                   >
                     <option value="">Selecione...</option>
@@ -270,11 +474,12 @@ export function OnboardingModal() {
                   </Select>
                 </div>
 
-                <Select 
-                  label="Cidade" 
-                  value={formData.cidade_ibge_id} 
+                <Select
+                  label="Cidade *"
+                  value={formData.cidade_ibge_id}
                   onChange={e => setFormData({...formData, cidade_ibge_id: e.target.value})}
                   disabled={!formData.estado || cities.length === 0}
+                  error={fieldErrors.cidade_ibge_id}
                 >
                   <option value="">{formData.estado ? 'Selecione a cidade...' : 'Selecione um estado primeiro'}</option>
                   {cities.map(c => (
@@ -286,7 +491,7 @@ export function OnboardingModal() {
                   <div className="col-span-2">
                     <Input label="Logradouro" value={formData.logradouro} onChange={e => setFormData({...formData, logradouro: e.target.value})} />
                   </div>
-                  <Input label="Número" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} />
+                  <Input label="Número *" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Bairro" value={formData.bairro} onChange={e => setFormData({...formData, bairro: e.target.value})} />
@@ -303,11 +508,47 @@ export function OnboardingModal() {
                   Dados do Responsável
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <Input label="Nome" value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} />
-                  <Input label="Sobrenome" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} />
+                  <Input
+                    label="Nome *"
+                    value={formData.firstName}
+                    onChange={(e) => {
+                      setFormData({...formData, firstName: e.target.value})
+                      if (fieldErrors.firstName && e.target.value.trim()) {
+                        setFieldErrors(prev => ({ ...prev, firstName: '' }))
+                      }
+                    }}
+                    error={fieldErrors.firstName}
+                  />
+                  <Input
+                    label="Sobrenome"
+                    value={formData.lastName}
+                    onChange={e => setFormData({...formData, lastName: e.target.value})}
+                  />
                 </div>
-                <Input label="E-mail de Contato" value={formData.email_contato} onChange={e => setFormData({...formData, email_contato: e.target.value})} />
-                <Input label="Telefone de Contato" value={formData.telefone_contato} onChange={e => setFormData({...formData, telefone_contato: e.target.value})} />
+                <Input
+                  label="E-mail de Contato *"
+                  type="email"
+                  value={formData.email_contato}
+                  onChange={(e) => {
+                    setFormData({...formData, email_contato: e.target.value})
+                    if (fieldErrors.email_contato && validators.email(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, email_contato: '' }))
+                    }
+                  }}
+                  error={fieldErrors.email_contato}
+                />
+                <Input
+                  label="Telefone de Contato"
+                  mask="telefoneCelular"
+                  value={formData.telefone_contato}
+                  onChange={(e) => {
+                    setFormData({...formData, telefone_contato: e.target.value})
+                    if (fieldErrors.telefone_contato && validators.telefoneCelular(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, telefone_contato: '' }))
+                    }
+                  }}
+                  error={fieldErrors.telefone_contato}
+                />
               </div>
             )}
           </div>
@@ -317,9 +558,9 @@ export function OnboardingModal() {
             <Button variant="ghost" disabled={step === 1} onClick={() => setStep(step - 1)}>
               Voltar
             </Button>
-            
+
             {step < 3 ? (
-              <Button onClick={() => setStep(step + 1)}>
+              <Button onClick={handleNextStep}>
                 Próximo Passo
               </Button>
             ) : (
