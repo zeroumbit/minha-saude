@@ -12,6 +12,7 @@ import { Building2, User, Save } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Empresa } from '@/lib/types/database'
 import { useAuthStore } from '@/lib/stores/auth-store'
+import { masks, validators } from '@/lib/validation'
 
 type Tab = 'empresa' | 'usuario'
 
@@ -19,6 +20,7 @@ export default function PerfilPage() {
   const [activeTab, setActiveTab] = useState<Tab>('empresa')
   const [isSaving, setIsSaving] = useState(false)
   const { empresa, user, setEmpresa, setUser } = useAuthStore()
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   
   // Estado para dados da empresa
   const [empresaData, setEmpresaData] = useState<Partial<Empresa>>({})
@@ -57,11 +59,42 @@ export default function PerfilPage() {
 
   const handleSaveEmpresa = async () => {
     if (!empresa) return
-    
+
+    // Validar campos
+    setFieldErrors({})
+    let hasError = false
+
+    if (!empresaData.nome_fantasia?.trim()) {
+      setFieldErrors(prev => ({ ...prev, nome_fantasia: 'Nome fantasia é obrigatório' }))
+      hasError = true
+    }
+
+    if (empresaData.cnpj && !validators.cnpj(empresaData.cnpj)) {
+      setFieldErrors(prev => ({ ...prev, cnpj: 'CNPJ inválido' }))
+      hasError = true
+    }
+
+    if (empresaData.telefone && !validators.telefoneCelular(empresaData.telefone)) {
+      setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
+      hasError = true
+    }
+
+    if (empresaData.email_financeiro && !validators.email(empresaData.email_financeiro)) {
+      setFieldErrors(prev => ({ ...prev, email_financeiro: 'E-mail inválido' }))
+      hasError = true
+    }
+
+    if (empresaData.site && !validators.url(empresaData.site)) {
+      setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
+      hasError = true
+    }
+
+    if (hasError) return
+
     setIsSaving(true)
     try {
       const supabase = createClient()
-      
+
       const { error } = await supabase
         .from('empresas')
         .update({
@@ -197,7 +230,13 @@ export default function PerfilPage() {
                 <Input
                   id="nome_fantasia"
                   value={empresaData.nome_fantasia || ''}
-                  onChange={(e) => setEmpresaData({ ...empresaData, nome_fantasia: e.target.value })}
+                  onChange={(e) => {
+                    setEmpresaData({ ...empresaData, nome_fantasia: e.target.value })
+                    if (fieldErrors.nome_fantasia && e.target.value.trim()) {
+                      setFieldErrors(prev => ({ ...prev, nome_fantasia: '' }))
+                    }
+                  }}
+                  error={fieldErrors.nome_fantasia}
                   placeholder="Ex: Minha Saúde Clínica"
                 />
               </div>
@@ -217,8 +256,15 @@ export default function PerfilPage() {
                 <Label htmlFor="cnpj">CNPJ</Label>
                 <Input
                   id="cnpj"
+                  mask="cnpj"
                   value={empresaData.cnpj || ''}
-                  onChange={(e) => setEmpresaData({ ...empresaData, cnpj: e.target.value })}
+                  onChange={(e) => {
+                    setEmpresaData({ ...empresaData, cnpj: e.target.value })
+                    if (fieldErrors.cnpj && validators.cnpj(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, cnpj: '' }))
+                    }
+                  }}
+                  error={fieldErrors.cnpj}
                   placeholder="00.000.000/0000-00"
                 />
               </div>
@@ -226,8 +272,15 @@ export default function PerfilPage() {
                 <Label htmlFor="telefone">Telefone</Label>
                 <Input
                   id="telefone"
+                  mask="telefoneCelular"
                   value={empresaData.telefone || ''}
-                  onChange={(e) => setEmpresaData({ ...empresaData, telefone: e.target.value })}
+                  onChange={(e) => {
+                    setEmpresaData({ ...empresaData, telefone: e.target.value })
+                    if (fieldErrors.telefone && validators.telefoneCelular(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, telefone: '' }))
+                    }
+                  }}
+                  error={fieldErrors.telefone}
                   placeholder="(00) 0000-0000"
                 />
               </div>
@@ -239,7 +292,13 @@ export default function PerfilPage() {
                 id="email_financeiro"
                 type="email"
                 value={empresaData.email_financeiro || ''}
-                onChange={(e) => setEmpresaData({ ...empresaData, email_financeiro: e.target.value })}
+                onChange={(e) => {
+                  setEmpresaData({ ...empresaData, email_financeiro: e.target.value })
+                  if (fieldErrors.email_financeiro && validators.email(e.target.value)) {
+                    setFieldErrors(prev => ({ ...prev, email_financeiro: '' }))
+                  }
+                }}
+                error={fieldErrors.email_financeiro}
                 placeholder="financeiro@empresa.com"
               />
             </div>
@@ -249,7 +308,13 @@ export default function PerfilPage() {
               <Input
                 id="site"
                 value={empresaData.site || ''}
-                onChange={(e) => setEmpresaData({ ...empresaData, site: e.target.value })}
+                onChange={(e) => {
+                  setEmpresaData({ ...empresaData, site: e.target.value })
+                  if (fieldErrors.site && validators.url(e.target.value)) {
+                    setFieldErrors(prev => ({ ...prev, site: '' }))
+                  }
+                }}
+                error={fieldErrors.site}
                 placeholder="https://www.empresa.com.br"
               />
             </div>

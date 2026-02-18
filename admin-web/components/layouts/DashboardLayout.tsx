@@ -18,6 +18,7 @@ import {
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { OnboardingModal } from '@/components/modals/OnboardingModal'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -228,6 +229,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </main>
       </div>
+      
+      <OnboardingModal />
     </div>
   )
 }

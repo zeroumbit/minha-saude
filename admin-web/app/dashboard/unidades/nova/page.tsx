@@ -1,21 +1,29 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import DashboardLayout from '@/components/layouts/DashboardLayout'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { createClient } from '@/lib/supabase/client'
 import { useAuthStore } from '@/lib/stores/auth-store'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
+import { fetchStates, fetchCitiesByState, fetchAddressByCep, State, City } from '@/lib/location'
+import { masks, validators } from '@/lib/validation'
 
 export default function NovaUnidadePage() {
   const router = useRouter()
   const { empresa } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  
+  const [states, setStates] = useState<State[]>([])
+  const [cities, setCities] = useState<City[]>([])
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false)
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -33,20 +41,117 @@ export default function NovaUnidadePage() {
     is_publico: true,
     is_public_partner: false,
     categorias: [] as string[],
+    instagram: '',
   })
+
+  // Carregar estados ao montar
+  useEffect(() => {
+    loadStates()
+  }, [])
+
+  // Carregar cidades quando o estado muda
+  useEffect(() => {
+    if (formData.estado) {
+      loadCities(formData.estado)
+    } else {
+      setCities([])
+    }
+  }, [formData.estado])
+
+  // Busca automática por CEP
+  useEffect(() => {
+    const cleanCep = formData.cep.replace(/\D/g, '')
+    if (cleanCep.length === 8) {
+      handleCepSearch(cleanCep)
+    }
+  }, [formData.cep])
+
+  const loadStates = async () => {
+    try {
+      const data = await fetchStates()
+      setStates(data)
+    } catch (err) {
+      console.error('Erro ao carregar estados:', err)
+    }
+  }
+
+  const loadCities = async (uf: string) => {
+    try {
+      const data = await fetchCitiesByState(uf)
+      setCities(data)
+    } catch (err) {
+      console.error('Erro ao carregar cidades:', err)
+    }
+  }
+
+  const handleCepSearch = async (cep: string) => {
+    setIsLoadingLocation(true)
+    try {
+      const address = await fetchAddressByCep(cep)
+      if (address) {
+        setFormData(prev => ({
+          ...prev,
+          logradouro: address.logradouro,
+          bairro: address.bairro,
+          estado: address.uf,
+          cidade_ibge_id: address.ibge
+        }))
+      }
+    } catch (err) {
+      console.error('Erro ao buscar CEP:', err)
+    } finally {
+      setIsLoadingLocation(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!empresa) {
       setError('Empresa não identificada')
       return
+    }
+
+    // Validar campos
+    setFieldErrors({})
+    let hasError = false
+
+    if (!formData.nome.trim()) {
+      setFieldErrors(prev => ({ ...prev, nome: 'Nome é obrigatório' }))
+      hasError = true
     }
 
     if (formData.categorias.length === 0) {
       setError('Selecione pelo menos uma categoria')
       return
     }
+
+    if (formData.whatsapp && !validators.celular(formData.whatsapp)) {
+      setFieldErrors(prev => ({ ...prev, whatsapp: 'WhatsApp inválido' }))
+      hasError = true
+    }
+
+    if (formData.telefone && !validators.telefoneCelular(formData.telefone)) {
+      setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
+      hasError = true
+    }
+
+    if (formData.cep && !validators.cep(formData.cep)) {
+      setFieldErrors(prev => ({ ...prev, cep: 'CEP inválido' }))
+      hasError = true
+    }
+
+    if (!formData.cidade_ibge_id) {
+      setFieldErrors(prev => ({ ...prev, cidade_ibge_id: 'Cidade é obrigatória' }))
+      hasError = true
+    }
+
+    if (formData.instagram && !validators.instagram(formData.instagram)) {
+      setFieldErrors(prev => ({ ...prev, instagram: 'Instagram inválido' }))
+      hasError = true
+    }
+
+    if (hasError) return
 
     setError('')
     setIsLoading(true)
@@ -73,6 +178,7 @@ export default function NovaUnidadePage() {
           is_publico: formData.is_publico,
           is_public_partner: formData.is_public_partner,
           categorias: formData.categorias,
+          instagram: formData.instagram || null,
           status: 'ACTIVE',
         })
         .select()
@@ -190,15 +296,42 @@ export default function NovaUnidadePage() {
                 <Input
                   label="WhatsApp"
                   placeholder="(00) 00000-0000"
+                  mask="celular"
                   value={formData.whatsapp}
-                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, whatsapp: e.target.value })
+                    if (fieldErrors.whatsapp && validators.celular(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, whatsapp: '' }))
+                    }
+                  }}
+                  error={fieldErrors.whatsapp}
                 />
 
                 <Input
                   label="Telefone"
                   placeholder="(00) 0000-0000"
+                  mask="telefone"
                   value={formData.telefone}
-                  onChange={(e) => setFormData({ ...formData, telefone: e.target.value })}
+                  onChange={(e) => {
+                    setFormData({ ...formData, telefone: e.target.value })
+                    if (fieldErrors.telefone && validators.telefoneCelular(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, telefone: '' }))
+                    }
+                  }}
+                  error={fieldErrors.telefone}
+                />
+
+                <Input
+                  label="Instagram"
+                  placeholder="@clinicaexemplo"
+                  value={formData.instagram}
+                  onChange={(e) => {
+                    setFormData({ ...formData, instagram: e.target.value })
+                    if (fieldErrors.instagram && validators.instagram(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, instagram: '' }))
+                    }
+                  }}
+                  error={fieldErrors.instagram}
                 />
               </div>
             </CardContent>
@@ -212,31 +345,53 @@ export default function NovaUnidadePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Input
-                    label="CEP"
-                    placeholder="00000-000"
-                    value={formData.cep}
-                    onChange={(e) => setFormData({ ...formData, cep: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
+                    <Input
+                      label="CEP"
+                      mask="cep"
+                      value={formData.cep}
+                      onChange={e => {
+                        setFormData({...formData, cep: e.target.value})
+                        if (fieldErrors.cep && validators.cep(e.target.value)) {
+                          setFieldErrors(prev => ({ ...prev, cep: '' }))
+                        }
+                      }}
+                      placeholder="00000-000"
+                      error={fieldErrors.cep}
+                    />
+                    {isLoadingLocation && (
+                      <div className="absolute right-3 bottom-3">
+                        <Loader2 className="w-4 h-4 text-primary-600 animate-spin" />
+                      </div>
+                    )}
+                  </div>
 
-                  <Input
+                  <Select
                     label="Estado"
-                    placeholder="SP"
-                    maxLength={2}
                     value={formData.estado}
-                    onChange={(e) => setFormData({ ...formData, estado: e.target.value.toUpperCase() })}
-                  />
-
-                  <Input
-                    label="Código IBGE da Cidade *"
-                    placeholder="3550308"
-                    value={formData.cidade_ibge_id}
-                    onChange={(e) => setFormData({ ...formData, cidade_ibge_id: e.target.value })}
-                    required
-                    helperText="7 dígitos"
-                  />
+                    onChange={e => setFormData({...formData, estado: e.target.value})}
+                  >
+                    <option value="">Selecione...</option>
+                    {states.map(s => (
+                      <option key={s.sigla} value={s.sigla}>{s.nome}</option>
+                    ))}
+                  </Select>
                 </div>
+
+                <Select
+                  label="Cidade *"
+                  value={formData.cidade_ibge_id}
+                  onChange={e => setFormData({...formData, cidade_ibge_id: e.target.value})}
+                  disabled={!formData.estado || cities.length === 0}
+                  required
+                  error={fieldErrors.cidade_ibge_id}
+                >
+                  <option value="">{formData.estado ? 'Selecione a cidade...' : 'Selecione um estado primeiro'}</option>
+                  {cities.map(c => (
+                    <option key={c.id} value={c.id}>{c.nome}</option>
+                  ))}
+                </Select>
 
                 <Input
                   label="Logradouro"

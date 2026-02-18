@@ -41,6 +41,17 @@ export interface Empresa {
   origin: EmpresaOrigin
   is_public_partner: boolean
   categorias: string[]
+  onboarding_completed: boolean
+  instagram: string | null
+  whatsapp: string | null
+  email_sac: string | null
+  cep: string | null
+  estado: string | null
+  cidade_ibge_id: string | null
+  logradouro: string | null
+  numero: string | null
+  bairro: string | null
+  complemento: string | null
   created_at: string
   updated_at: string | null
   deleted_at: string | null
@@ -98,6 +109,7 @@ export interface Unidade {
   categorias: string[]
   whatsapp: string | null
   telefone: string | null
+  instagram: string | null
   cep: string | null
   logradouro: string | null
   numero: string | null
