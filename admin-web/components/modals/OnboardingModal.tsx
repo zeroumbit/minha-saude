@@ -40,11 +40,10 @@ export function OnboardingModal() {
     bairro: '',
     complemento: '',
 
-    // Responsável
-    firstName: '',
-    lastName: '',
-    email_contato: '',
-    telefone_contato: '',
+    // Responsável (Agora salvos na tabela empresas para permitir independência por empresa)
+    responsavel_nome: '',
+    responsavel_email: '',
+    responsavel_telefone: '',
   })
 
   // Carregar estados ao abrir o modal
@@ -115,12 +114,21 @@ export function OnboardingModal() {
       setIsOpen(true)
       setFormData({
         ...formData,
-        firstName: user?.first_name || '',
-        lastName: user?.last_name || '',
-        email_contato: user?.email || '',
+        responsavel_nome: empresa.responsavel_nome || `${user?.first_name || ''} ${user?.last_name || ''}`.trim(),
+        responsavel_email: empresa.responsavel_email || user?.email || '',
+        responsavel_telefone: empresa.responsavel_telefone || '',
         whatsapp: empresa.whatsapp || '',
         telefone: empresa.telefone || '',
         site: empresa.site || '',
+        instagram: empresa.instagram || '',
+        email_sac: empresa.email_sac || '',
+        cep: empresa.cep || '',
+        estado: empresa.estado || '',
+        cidade_ibge_id: empresa.cidade_ibge_id || '',
+        logradouro: empresa.logradouro || '',
+        numero: empresa.numero || '',
+        bairro: empresa.bairro || '',
+        complemento: empresa.complemento || '',
       })
     }
   }, [empresa])
@@ -138,24 +146,16 @@ export function OnboardingModal() {
       setFieldErrors(prev => ({ ...prev, whatsapp: 'WhatsApp inválido' }))
       hasError = true
     }
-
     if (formData.telefone && !validators.telefoneCelular(formData.telefone)) {
       setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
       hasError = true
     }
-
     if (formData.email_sac && !validators.email(formData.email_sac)) {
       setFieldErrors(prev => ({ ...prev, email_sac: 'E-mail inválido' }))
       hasError = true
     }
-
     if (formData.site && !validators.url(formData.site)) {
       setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
-      hasError = true
-    }
-
-    if (formData.instagram && !validators.instagram(formData.instagram)) {
-      setFieldErrors(prev => ({ ...prev, instagram: 'Instagram inválido' }))
       hasError = true
     }
 
@@ -164,25 +164,25 @@ export function OnboardingModal() {
       setFieldErrors(prev => ({ ...prev, cep: 'CEP inválido' }))
       hasError = true
     }
-
     if (!formData.cidade_ibge_id) {
       setFieldErrors(prev => ({ ...prev, cidade_ibge_id: 'Cidade é obrigatória' }))
       hasError = true
     }
 
     // Step 3: Responsável
-    if (!formData.firstName?.trim()) {
-      setFieldErrors(prev => ({ ...prev, firstName: 'Nome é obrigatório' }))
+    if (!formData.responsavel_nome?.trim()) {
+      setFieldErrors(prev => ({ ...prev, responsavel_nome: 'Nome é obrigatório' }))
       hasError = true
     }
-
-    if (formData.email_contato && !validators.email(formData.email_contato)) {
-      setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail inválido' }))
+    if (!formData.responsavel_email?.trim()) {
+      setFieldErrors(prev => ({ ...prev, responsavel_email: 'E-mail é obrigatório' }))
+      hasError = true
+    } else if (!validators.email(formData.responsavel_email)) {
+      setFieldErrors(prev => ({ ...prev, responsavel_email: 'E-mail inválido' }))
       hasError = true
     }
-
-    if (formData.telefone_contato && !validators.telefoneCelular(formData.telefone_contato)) {
-      setFieldErrors(prev => ({ ...prev, telefone_contato: 'Telefone inválido' }))
+    if (formData.responsavel_telefone && !validators.telefoneCelular(formData.responsavel_telefone)) {
+      setFieldErrors(prev => ({ ...prev, responsavel_telefone: 'Telefone inválido' }))
       hasError = true
     }
 
@@ -193,7 +193,7 @@ export function OnboardingModal() {
     try {
       const supabase = createClient()
 
-      // 1. Atualizar Empresa
+      // 1. Atualizar Empresa (Incluindo dados do responsável específicos desta empresa)
       const { error: empresaError } = await supabase
         .from('empresas')
         .update({
@@ -209,34 +209,30 @@ export function OnboardingModal() {
           numero: formData.numero,
           bairro: formData.bairro,
           complemento: formData.complemento,
+          responsavel_nome: formData.responsavel_nome,
+          responsavel_email: formData.responsavel_email,
+          responsavel_telefone: formData.responsavel_telefone,
           onboarding_completed: true
         })
         .eq('id', empresa.id)
 
       if (empresaError) throw empresaError
 
-      // 2. Atualizar Perfil do Responsável
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          email_contato: formData.email_contato,
-          telefone_contato: formData.telefone_contato
-        })
-        .eq('id', user.id)
-
-      if (profileError) throw profileError
+      // 2. Atualizar Perfil do Usuário se o nome ainda estiver vazio (opcional, para conveniência)
+      if (!user.first_name) {
+        const [firstName, ...rest] = formData.responsavel_nome.split(' ')
+        await supabase
+          .from('profiles')
+          .update({
+            first_name: firstName,
+            last_name: rest.join(' ')
+          })
+          .eq('id', user.id)
+      }
 
       // 3. Atualizar Store Local
       const { data: updatedEmpresa } = await supabase.from('empresas').select('*').eq('id', empresa.id).single()
       if (updatedEmpresa) setEmpresa(updatedEmpresa)
-
-      setUser({
-        ...user,
-        first_name: formData.firstName,
-        last_name: formData.lastName
-      })
 
       setIsOpen(false)
     } catch (err: any) {
@@ -258,24 +254,16 @@ export function OnboardingModal() {
         setFieldErrors(prev => ({ ...prev, whatsapp: 'WhatsApp inválido' }))
         hasError = true
       }
-
       if (formData.telefone && !validators.telefoneCelular(formData.telefone)) {
         setFieldErrors(prev => ({ ...prev, telefone: 'Telefone inválido' }))
         hasError = true
       }
-
       if (formData.email_sac && !validators.email(formData.email_sac)) {
         setFieldErrors(prev => ({ ...prev, email_sac: 'E-mail inválido' }))
         hasError = true
       }
-
       if (formData.site && !validators.url(formData.site)) {
         setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
-        hasError = true
-      }
-
-      if (formData.instagram && !validators.instagram(formData.instagram)) {
-        setFieldErrors(prev => ({ ...prev, instagram: 'Instagram inválido' }))
         hasError = true
       }
     }
@@ -286,35 +274,12 @@ export function OnboardingModal() {
         setFieldErrors(prev => ({ ...prev, cep: 'CEP inválido' }))
         hasError = true
       }
-
       if (!formData.cidade_ibge_id) {
         setFieldErrors(prev => ({ ...prev, cidade_ibge_id: 'Cidade é obrigatória' }))
         hasError = true
       }
-
       if (!formData.numero?.trim()) {
         setFieldErrors(prev => ({ ...prev, numero: 'Número é obrigatório' }))
-        hasError = true
-      }
-    }
-
-    if (step === 3) {
-      // Validar Step 3: Responsável
-      if (!formData.firstName?.trim()) {
-        setFieldErrors(prev => ({ ...prev, firstName: 'Nome é obrigatório' }))
-        hasError = true
-      }
-
-      if (!formData.email_contato?.trim()) {
-        setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail é obrigatório' }))
-        hasError = true
-      } else if (!validators.email(formData.email_contato)) {
-        setFieldErrors(prev => ({ ...prev, email_contato: 'E-mail inválido' }))
-        hasError = true
-      }
-
-      if (formData.telefone_contato && !validators.telefoneCelular(formData.telefone_contato)) {
-        setFieldErrors(prev => ({ ...prev, telefone_contato: 'Telefone inválido' }))
         hasError = true
       }
     }
@@ -491,7 +456,7 @@ export function OnboardingModal() {
                   <div className="col-span-2">
                     <Input label="Logradouro" value={formData.logradouro} onChange={e => setFormData({...formData, logradouro: e.target.value})} />
                   </div>
-                  <Input label="Número *" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} />
+                  <Input label="Número *" value={formData.numero} onChange={e => setFormData({...formData, numero: e.target.value})} error={fieldErrors.numero} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <Input label="Bairro" value={formData.bairro} onChange={e => setFormData({...formData, bairro: e.target.value})} />
@@ -505,49 +470,50 @@ export function OnboardingModal() {
               <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
                 <div className="flex items-center gap-2 text-slate-900 font-bold mb-4">
                   <User className="w-5 h-5 text-primary-600" />
-                  Dados do Responsável
+                  Dados do Responsável pela Conta
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Input
-                    label="Nome *"
-                    value={formData.firstName}
-                    onChange={(e) => {
-                      setFormData({...formData, firstName: e.target.value})
-                      if (fieldErrors.firstName && e.target.value.trim()) {
-                        setFieldErrors(prev => ({ ...prev, firstName: '' }))
-                      }
-                    }}
-                    error={fieldErrors.firstName}
-                  />
-                  <Input
-                    label="Sobrenome"
-                    value={formData.lastName}
-                    onChange={e => setFormData({...formData, lastName: e.target.value})}
-                  />
-                </div>
+                <p className="text-xs text-slate-500 -mt-2">
+                  Estes dados são específicos para esta empresa anunciante.
+                </p>
+                
+                <Input
+                  label="Nome Completo do Responsável *"
+                  value={formData.responsavel_nome}
+                  onChange={(e) => {
+                    setFormData({...formData, responsavel_nome: e.target.value})
+                    if (fieldErrors.responsavel_nome && e.target.value.trim()) {
+                      setFieldErrors(prev => ({ ...prev, responsavel_nome: '' }))
+                    }
+                  }}
+                  error={fieldErrors.responsavel_nome}
+                  placeholder="Nome do responsável jurídico ou administrativo"
+                />
+
                 <Input
                   label="E-mail de Contato *"
                   type="email"
-                  value={formData.email_contato}
+                  value={formData.responsavel_email}
                   onChange={(e) => {
-                    setFormData({...formData, email_contato: e.target.value})
-                    if (fieldErrors.email_contato && validators.email(e.target.value)) {
-                      setFieldErrors(prev => ({ ...prev, email_contato: '' }))
+                    setFormData({...formData, responsavel_email: e.target.value})
+                    if (fieldErrors.responsavel_email && validators.email(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, responsavel_email: '' }))
                     }
                   }}
-                  error={fieldErrors.email_contato}
+                  error={fieldErrors.responsavel_email}
+                  placeholder="email@contato.com"
                 />
                 <Input
                   label="Telefone de Contato"
                   mask="telefoneCelular"
-                  value={formData.telefone_contato}
+                  value={formData.responsavel_telefone}
                   onChange={(e) => {
-                    setFormData({...formData, telefone_contato: e.target.value})
-                    if (fieldErrors.telefone_contato && validators.telefoneCelular(e.target.value)) {
-                      setFieldErrors(prev => ({ ...prev, telefone_contato: '' }))
+                    setFormData({...formData, responsavel_telefone: e.target.value})
+                    if (fieldErrors.responsavel_telefone && validators.telefoneCelular(e.target.value)) {
+                      setFieldErrors(prev => ({ ...prev, responsavel_telefone: '' }))
                     }
                   }}
-                  error={fieldErrors.telefone_contato}
+                  error={fieldErrors.responsavel_telefone}
+                  placeholder="(00) 00000-0000"
                 />
               </div>
             )}
@@ -558,7 +524,7 @@ export function OnboardingModal() {
             <Button variant="ghost" disabled={step === 1} onClick={() => setStep(step - 1)}>
               Voltar
             </Button>
-
+            
             {step < 3 ? (
               <Button onClick={handleNextStep}>
                 Próximo Passo

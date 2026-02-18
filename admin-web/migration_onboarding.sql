@@ -20,6 +20,7 @@ ALTER TABLE public.empresas ADD COLUMN IF NOT EXISTS complemento TEXT;
 -- 3. Campo Instagram para Unidades
 ALTER TABLE public.unidades ADD COLUMN IF NOT EXISTS instagram TEXT;
 
--- 4. Campo Telefone de contato para Responsável (no Perfil)
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS telefone_contato TEXT;
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email_contato TEXT;
+-- 4. Campos de Responsável na Empresa (Independente por empresa)
+ALTER TABLE public.empresas ADD COLUMN IF NOT EXISTS responsavel_nome TEXT;
+ALTER TABLE public.empresas ADD COLUMN IF NOT EXISTS responsavel_email TEXT;
+ALTER TABLE public.empresas ADD COLUMN IF NOT EXISTS responsavel_telefone TEXT;

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input'
 import { Label } from '@/components/ui/Label'
 import { Textarea } from '@/components/ui/Textarea'
 import { Badge } from '@/components/ui/Badge'
-import { Building2, User, Save } from 'lucide-react'
+import { Building2, User, Save, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Empresa } from '@/lib/types/database'
 import { useAuthStore } from '@/lib/stores/auth-store'
@@ -42,7 +42,13 @@ export default function PerfilPage() {
         telefone: empresa.telefone || '',
         descricao: empresa.descricao || '',
         site: empresa.site || '',
-        logo_url: empresa.logo_url || ''
+        logo_url: empresa.logo_url || '',
+        responsavel_nome: empresa.responsavel_nome || '',
+        responsavel_email: empresa.responsavel_email || '',
+        responsavel_telefone: empresa.responsavel_telefone || '',
+        instagram: empresa.instagram || '',
+        whatsapp: empresa.whatsapp || '',
+        email_sac: empresa.email_sac || ''
       })
     }
   }, [empresa])
@@ -85,7 +91,17 @@ export default function PerfilPage() {
     }
 
     if (empresaData.site && !validators.url(empresaData.site)) {
-      setFieldErrors(prev => ({ ...prev, site: 'URL inválida' }))
+      setFieldErrors(prev => ({ ...prev, site: 'URL inválidade' }))
+      hasError = true
+    }
+
+    // Responsável
+    if (!empresaData.responsavel_nome?.trim()) {
+      setFieldErrors(prev => ({ ...prev, responsavel_nome: 'Nome do responsável é obrigatório' }))
+      hasError = true
+    }
+    if (empresaData.responsavel_email && !validators.email(empresaData.responsavel_email)) {
+      setFieldErrors(prev => ({ ...prev, responsavel_email: 'E-mail do responsável inválido' }))
       hasError = true
     }
 
@@ -182,9 +198,9 @@ export default function PerfilPage() {
   return (
     <DashboardLayout>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Meu Perfil</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Configurações</h1>
         <p className="text-slate-600 mt-1">
-          Gerencie suas informações pessoais e da sua empresa
+          Gerencie as informações da sua empresa e sua conta pessoal
         </p>
       </div>
 
@@ -210,152 +226,228 @@ export default function PerfilPage() {
           }`}
         >
           <User className="w-4 h-4" />
-          Meu Perfil
+          Meu Perfil de Acesso
         </button>
       </div>
 
       {/* Tab: Dados da Empresa */}
       {activeTab === 'empresa' && (
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <CardTitle>Informações da Empresa</CardTitle>
-            <CardDescription>
-              Atualize os dados cadastrais da sua empresa que aparecem no app
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div>
-                <Label htmlFor="nome_fantasia">Nome Fantasia</Label>
-                <Input
-                  id="nome_fantasia"
-                  value={empresaData.nome_fantasia || ''}
-                  onChange={(e) => {
-                    setEmpresaData({ ...empresaData, nome_fantasia: e.target.value })
-                    if (fieldErrors.nome_fantasia && e.target.value.trim()) {
-                      setFieldErrors(prev => ({ ...prev, nome_fantasia: '' }))
-                    }
-                  }}
-                  error={fieldErrors.nome_fantasia}
-                  placeholder="Ex: Minha Saúde Clínica"
-                />
+        <div className="space-y-6 animate-fade-in">
+          <Card>
+            <CardHeader>
+              <CardTitle>Identificação da Empresa</CardTitle>
+              <CardDescription>
+                Informações cadastrais básicas da empresa anunciante
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="nome_fantasia">Nome Fantasia *</Label>
+                  <Input
+                    id="nome_fantasia"
+                    value={empresaData.nome_fantasia || ''}
+                    onChange={(e) => {
+                      setEmpresaData({ ...empresaData, nome_fantasia: e.target.value })
+                      if (fieldErrors.nome_fantasia && e.target.value.trim()) {
+                        setFieldErrors(prev => ({ ...prev, nome_fantasia: '' }))
+                      }
+                    }}
+                    error={fieldErrors.nome_fantasia}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="razao_social">Razão Social</Label>
+                  <Input
+                    id="razao_social"
+                    value={empresaData.razao_social || ''}
+                    onChange={(e) => setEmpresaData({ ...empresaData, razao_social: e.target.value })}
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="razao_social">Razão Social</Label>
-                <Input
-                  id="razao_social"
-                  value={empresaData.razao_social || ''}
-                  onChange={(e) => setEmpresaData({ ...empresaData, razao_social: e.target.value })}
-                  placeholder="Ex: Minha Saúde LTDA"
-                />
-              </div>
-            </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="cnpj">CNPJ</Label>
+                  <Input
+                    id="cnpj"
+                    mask="cnpj"
+                    value={empresaData.cnpj || ''}
+                    onChange={(e) => {
+                      setEmpresaData({ ...empresaData, cnpj: e.target.value })
+                      if (fieldErrors.cnpj && validators.cnpj(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, cnpj: '' }))
+                      }
+                    }}
+                    error={fieldErrors.cnpj}
+                    placeholder="00.000.000/0000-00"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="site">Site</Label>
+                  <Input
+                    id="site"
+                    value={empresaData.site || ''}
+                    onChange={(e) => {
+                      setEmpresaData({ ...empresaData, site: e.target.value })
+                      if (fieldErrors.site && validators.url(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, site: '' }))
+                      }
+                    }}
+                    error={fieldErrors.site}
+                    placeholder="https://www.empresa.com.br"
+                  />
+                </div>
+              </div>
+
               <div>
-                <Label htmlFor="cnpj">CNPJ</Label>
-                <Input
-                  id="cnpj"
-                  mask="cnpj"
-                  value={empresaData.cnpj || ''}
-                  onChange={(e) => {
-                    setEmpresaData({ ...empresaData, cnpj: e.target.value })
-                    if (fieldErrors.cnpj && validators.cnpj(e.target.value)) {
-                      setFieldErrors(prev => ({ ...prev, cnpj: '' }))
-                    }
-                  }}
-                  error={fieldErrors.cnpj}
-                  placeholder="00.000.000/0000-00"
+                <Label htmlFor="descricao">Descrição (Aparece no App)</Label>
+                <Textarea
+                  id="descricao"
+                  value={empresaData.descricao || ''}
+                  onChange={(e) => setEmpresaData({ ...empresaData, descricao: e.target.value })}
+                  placeholder="Conte um pouco sobre os serviços oferecidos..."
+                  rows={4}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary-600" />
               <div>
-                <Label htmlFor="telefone">Telefone</Label>
+                <CardTitle>Responsável pela Conta</CardTitle>
+                <CardDescription>
+                  Pessoa responsável por esta empresa anunciante
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="responsavel_nome">Nome Completo *</Label>
+                  <Input
+                    id="responsavel_nome"
+                    value={empresaData.responsavel_nome || ''}
+                    onChange={(e) => {
+                      setEmpresaData({ ...empresaData, responsavel_nome: e.target.value })
+                      if (fieldErrors.responsavel_nome && e.target.value.trim()) {
+                        setFieldErrors(prev => ({ ...prev, responsavel_nome: '' }))
+                      }
+                    }}
+                    error={fieldErrors.responsavel_nome}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="responsavel_email">E-mail de Contato *</Label>
+                  <Input
+                    id="responsavel_email"
+                    type="email"
+                    value={empresaData.responsavel_email || ''}
+                    onChange={(e) => {
+                      setEmpresaData({ ...empresaData, responsavel_email: e.target.value })
+                      if (fieldErrors.responsavel_email && validators.email(e.target.value)) {
+                        setFieldErrors(prev => ({ ...prev, responsavel_email: '' }))
+                      }
+                    }}
+                    error={fieldErrors.responsavel_email}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="responsavel_telefone">Telefone de Contato</Label>
                 <Input
-                  id="telefone"
+                  id="responsavel_telefone"
                   mask="telefoneCelular"
-                  value={empresaData.telefone || ''}
-                  onChange={(e) => {
-                    setEmpresaData({ ...empresaData, telefone: e.target.value })
-                    if (fieldErrors.telefone && validators.telefoneCelular(e.target.value)) {
-                      setFieldErrors(prev => ({ ...prev, telefone: '' }))
-                    }
-                  }}
-                  error={fieldErrors.telefone}
-                  placeholder="(00) 0000-0000"
+                  value={empresaData.responsavel_telefone || ''}
+                  onChange={(e) => setEmpresaData({ ...empresaData, responsavel_telefone: e.target.value })}
+                  placeholder="(00) 00000-0000"
                 />
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <Label htmlFor="email_financeiro">E-mail Financeiro</Label>
-              <Input
-                id="email_financeiro"
-                type="email"
-                value={empresaData.email_financeiro || ''}
-                onChange={(e) => {
-                  setEmpresaData({ ...empresaData, email_financeiro: e.target.value })
-                  if (fieldErrors.email_financeiro && validators.email(e.target.value)) {
-                    setFieldErrors(prev => ({ ...prev, email_financeiro: '' }))
-                  }
-                }}
-                error={fieldErrors.email_financeiro}
-                placeholder="financeiro@empresa.com"
-              />
-            </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Financeiro e SAC</CardTitle>
+              <CardDescription>
+                Canais de comunicação para faturamento e atendimento ao cliente
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="email_financeiro">E-mail Financeiro</Label>
+                  <Input
+                    id="email_financeiro"
+                    type="email"
+                    value={empresaData.email_financeiro || ''}
+                    onChange={(e) => setEmpresaData({ ...empresaData, email_financeiro: e.target.value })}
+                    placeholder="financeiro@empresa.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="telefone_geral">Telefone Geral</Label>
+                  <Input
+                    id="telefone_geral"
+                    mask="telefoneCelular"
+                    value={empresaData.telefone || ''}
+                    onChange={(e) => setEmpresaData({ ...empresaData, telefone: e.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="whatsapp">WhatsApp SAC</Label>
+                  <Input
+                    id="whatsapp"
+                    mask="celular"
+                    value={empresaData.whatsapp || ''}
+                    onChange={(e) => setEmpresaData({ ...empresaData, whatsapp: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email_sac">E-mail SAC</Label>
+                  <Input
+                    id="email_sac"
+                    type="email"
+                    value={empresaData.email_sac || ''}
+                    onChange={(e) => setEmpresaData({ ...empresaData, email_sac: e.target.value })}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-            <div>
-              <Label htmlFor="site">Site</Label>
-              <Input
-                id="site"
-                value={empresaData.site || ''}
-                onChange={(e) => {
-                  setEmpresaData({ ...empresaData, site: e.target.value })
-                  if (fieldErrors.site && validators.url(e.target.value)) {
-                    setFieldErrors(prev => ({ ...prev, site: '' }))
-                  }
-                }}
-                error={fieldErrors.site}
-                placeholder="https://www.empresa.com.br"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="descricao">Descrição</Label>
-              <Textarea
-                id="descricao"
-                value={empresaData.descricao || ''}
-                onChange={(e) => setEmpresaData({ ...empresaData, descricao: e.target.value })}
-                placeholder="Breve descrição sobre sua empresa..."
-                rows={4}
-              />
-            </div>
-
-            <div className="flex items-center gap-4 pt-4">
-              <Button 
-                onClick={handleSaveEmpresa} 
-                disabled={isSaving}
-              >
-                {isSaving ? 'Salvando...' : 'Salvar Empresa'}
+          <div className="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-4">
+              <Button onClick={handleSaveEmpresa} isLoading={isSaving} icon={<Save className="w-4 h-4" />}>
+                Salvar Todas as Alterações
               </Button>
-              
               {empresa && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-slate-600">Status:</span>
+                <div className="hidden md:flex items-center gap-2">
+                  <span className="text-sm text-slate-500">Status da Conta:</span>
                   {getStatusBadge(empresa.status)}
                 </div>
               )}
             </div>
-          </CardContent>
-        </Card>
+            {empresa?.is_public_partner && (
+              <Badge variant="success" className="bg-primary-50 text-primary-700 hover:bg-primary-100 border-primary-200">
+                Parceiro Público
+              </Badge>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Tab: Perfil do Usuário */}
       {activeTab === 'usuario' && (
         <Card className="animate-fade-in">
           <CardHeader>
-            <CardTitle>Meu Perfil</CardTitle>
+            <CardTitle>Meu Perfil de Acesso</CardTitle>
             <CardDescription>
-              Seus dados de acesso e identificação pessoal
+              Seus dados pessoais no sistema (usados para todos os seus anunciantes)
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -381,7 +473,7 @@ export default function PerfilPage() {
             </div>
 
             <div>
-              <Label htmlFor="email">E-mail de Acesso</Label>
+              <Label htmlFor="email">E-mail de Login</Label>
               <Input
                 id="email"
                 type="email"
@@ -389,17 +481,18 @@ export default function PerfilPage() {
                 onChange={(e) => setPerfilData({ ...perfilData, email: e.target.value })}
                 placeholder="seu@email.com"
               />
-              <p className="text-xs text-slate-500 mt-1">
-                Ao alterar o e-mail, você precisará verificá-lo no próximo acesso.
+              <p className="text-xs text-slate-500 mt-2">
+                Nota: O e-mail de login é único e serve para acessar todas as empresas vinculadas ao seu usuário.
               </p>
             </div>
 
             <div className="pt-4">
               <Button 
                 onClick={handleSavePerfil} 
-                disabled={isSaving}
+                isLoading={isSaving}
+                icon={<Save className="w-4 h-4" />}
               >
-                {isSaving ? 'Salvando...' : 'Atualizar Perfil'}
+                Atualizar Perfil Pessoal
               </Button>
             </div>
           </CardContent>

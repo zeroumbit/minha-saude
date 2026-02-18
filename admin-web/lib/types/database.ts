@@ -52,6 +52,9 @@ export interface Empresa {
   numero: string | null
   bairro: string | null
   complemento: string | null
+  responsavel_nome: string | null
+  responsavel_email: string | null
+  responsavel_telefone: string | null
   created_at: string
   updated_at: string | null
   deleted_at: string | null

@@ -48,6 +48,7 @@ export default function EquipePage() {
           )
         `)
         .eq('empresa_id', empresa.id)
+        .neq('role', 'OWNER')
         .order('created_at', { ascending: true })
 
       if (error) {
@@ -58,6 +59,7 @@ export default function EquipePage() {
           .from('empresa_usuarios')
           .select('*')
           .eq('empresa_id', empresa.id)
+          .neq('role', 'OWNER')
         
         if (simpleError) throw simpleError
         
