@@ -19,7 +19,6 @@ export default function NovaUnidadePage() {
 
   const [formData, setFormData] = useState({
     nome: '',
-    categoria: '',
     whatsapp: '',
     telefone: '',
     cep: '',
@@ -32,6 +31,8 @@ export default function NovaUnidadePage() {
     longitude: '',
     maps_url: '',
     is_publico: true,
+    is_public_partner: false,
+    categorias: [] as string[],
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +40,11 @@ export default function NovaUnidadePage() {
     
     if (!empresa) {
       setError('Empresa não identificada')
+      return
+    }
+
+    if (formData.categorias.length === 0) {
+      setError('Selecione pelo menos uma categoria')
       return
     }
 
@@ -53,7 +59,6 @@ export default function NovaUnidadePage() {
         .insert({
           empresa_id: empresa.id,
           nome: formData.nome,
-          categoria: formData.categoria || null,
           whatsapp: formData.whatsapp || null,
           telefone: formData.telefone || null,
           cep: formData.cep || null,
@@ -66,6 +71,8 @@ export default function NovaUnidadePage() {
           longitude: formData.longitude ? parseFloat(formData.longitude) : null,
           maps_url: formData.maps_url || null,
           is_publico: formData.is_publico,
+          is_public_partner: formData.is_public_partner,
+          categorias: formData.categorias,
           status: 'ACTIVE',
         })
         .select()
@@ -97,7 +104,7 @@ export default function NovaUnidadePage() {
         <p className="text-slate-600 mb-8">Preencha os dados da nova unidade</p>
 
         {error && (
-          <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg">
+          <div className="mb-6 p-4 bg-danger-50 border border-danger-200 rounded-lg animate-fade-in">
             <p className="text-sm text-danger-700">{error}</p>
           </div>
         )}
@@ -107,10 +114,10 @@ export default function NovaUnidadePage() {
           <Card>
             <CardHeader>
               <CardTitle>Informações Básicas</CardTitle>
-              <CardDescription>Dados principais da unidade</CardDescription>
+              <CardDescription>Dados principais da unidade e categorias de atuação</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <Input
                   label="Nome da Unidade *"
                   placeholder="Ex: Clínica Centro"
@@ -119,24 +126,54 @@ export default function NovaUnidadePage() {
                   required
                 />
 
-                <Input
-                  label="Categoria"
-                  placeholder="Ex: Clínica Médica, Laboratório, Hospital..."
-                  value={formData.categoria}
-                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                />
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-slate-900">Categorias da Unidade *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['CONSULTAS', 'EXAMES', 'FARMÁCIA'].map((cat) => (
+                      <label key={cat} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-primary-600 rounded"
+                          checked={formData.categorias.includes(cat)}
+                          onChange={(e) => {
+                            const newCats = e.target.checked
+                              ? [...formData.categorias, cat]
+                              : formData.categorias.filter(c => c !== cat)
+                            setFormData({ ...formData, categorias: newCats })
+                          }}
+                        />
+                        <span className="text-sm font-medium text-slate-700">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="is_publico"
-                    checked={formData.is_publico}
-                    onChange={(e) => setFormData({ ...formData, is_publico: e.target.checked })}
-                    className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
-                  />
-                  <label htmlFor="is_publico" className="text-sm font-medium text-slate-900">
-                    Tornar pública no aplicativo
-                  </label>
+                <div className="flex flex-col gap-4 pt-2">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <input
+                      type="checkbox"
+                      id="is_publico"
+                      checked={formData.is_publico}
+                      onChange={(e) => setFormData({ ...formData, is_publico: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
+                    />
+                    <label htmlFor="is_publico" className="text-sm font-medium text-slate-900 cursor-pointer">
+                      Tornar pública no aplicativo (visível para usuários)
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-primary-50 rounded-xl border border-primary-100">
+                    <input
+                      type="checkbox"
+                      id="is_public_partner"
+                      checked={formData.is_public_partner}
+                      onChange={(e) => setFormData({ ...formData, is_public_partner: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
+                    />
+                    <label htmlFor="is_public_partner" className="text-sm font-bold text-primary-900 cursor-pointer">
+                      Unidade Pública / Parceira Governamental
+                    </label>
+                  </div>
                 </div>
               </div>
             </CardContent>

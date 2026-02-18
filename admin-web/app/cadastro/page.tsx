@@ -22,6 +22,8 @@ export default function CadastroPage() {
     telefone: '',
     site: '',
     descricao: '',
+    categorias: [] as string[],
+    is_public_partner: false,
 
     // Step 2: Dados do Responsável
     firstName: '',
@@ -76,6 +78,8 @@ export default function CadastroPage() {
           telefone: formData.telefone || null,
           site: formData.site || null,
           descricao: formData.descricao || null,
+          categorias: formData.categorias,
+          is_public_partner: formData.is_public_partner,
           status: 'ACTIVE',
           origin: 'SELF_SIGNUP',
         })
@@ -200,6 +204,43 @@ export default function CadastroPage() {
                     value={formData.descricao}
                     onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
                   />
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <label className="block text-sm font-bold text-slate-900">Categorias de Atuação *</label>
+                  <div className="flex flex-wrap gap-3">
+                    {['CONSULTAS', 'EXAMES', 'FARMÁCIA'].map((cat) => (
+                      <label key={cat} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-primary-600 rounded"
+                          checked={formData.categorias.includes(cat)}
+                          onChange={(e) => {
+                            const newCats = e.target.checked
+                              ? [...formData.categorias, cat]
+                              : formData.categorias.filter(c => c !== cat)
+                            setFormData({ ...formData, categorias: newCats })
+                          }}
+                        />
+                        <span className="text-sm font-medium text-slate-700">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500">Selecione pelo menos uma categoria onde sua empresa atua.</p>
+                </div>
+
+                <div className="flex items-center gap-3 p-4 bg-primary-50 border border-primary-100 rounded-xl">
+                  <input
+                    type="checkbox"
+                    id="is_public_partner"
+                    className="w-5 h-5 text-primary-600 rounded border-primary-300 focus:ring-primary-500"
+                    checked={formData.is_public_partner}
+                    onChange={(e) => setFormData({ ...formData, is_public_partner: e.target.checked })}
+                  />
+                  <div>
+                    <label htmlFor="is_public_partner" className="text-sm font-bold text-primary-900 block">Empresa Pública / Parceira</label>
+                    <p className="text-xs text-primary-700">Marque se sua empresa é uma unidade pública de saúde ou parceira governamental.</p>
+                  </div>
                 </div>
 
                 <Button

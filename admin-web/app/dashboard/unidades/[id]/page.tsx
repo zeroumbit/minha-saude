@@ -21,7 +21,6 @@ export default function EditarUnidadePage() {
 
   const [formData, setFormData] = useState({
     nome: '',
-    categoria: '',
     whatsapp: '',
     telefone: '',
     cep: '',
@@ -34,6 +33,8 @@ export default function EditarUnidadePage() {
     longitude: '',
     maps_url: '',
     is_publico: true,
+    is_public_partner: false,
+    categorias: [] as string[],
   })
 
   useEffect(() => {
@@ -42,13 +43,7 @@ export default function EditarUnidadePage() {
 
   const loadUnidade = async () => {
     const supabase = createClient()
-    const { data: user } = await supabase.auth.getUser()
-
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
+    
     try {
       const { data, error } = await supabase
         .from('unidades')
@@ -61,7 +56,6 @@ export default function EditarUnidadePage() {
 
       setFormData({
         nome: data.nome,
-        categoria: data.categoria || '',
         whatsapp: data.whatsapp || '',
         telefone: data.telefone || '',
         cep: data.cep || '',
@@ -74,6 +68,8 @@ export default function EditarUnidadePage() {
         longitude: data.longitude?.toString() || '',
         maps_url: data.maps_url || '',
         is_publico: data.is_publico,
+        is_public_partner: data.is_public_partner || false,
+        categorias: data.categorias || [],
       })
     } catch (err: any) {
       console.error(err)
@@ -87,9 +83,13 @@ export default function EditarUnidadePage() {
     e.preventDefault()
     
     if (!empresa) {
-        // Se a empresa não estiver carregada ainda (ex: refresh na página), tenta pegar do store ou segura o envio
-         setError('Aguarde o carregamento dos dados da empresa.')
-        return
+      setError('Empresa não identificada')
+      return
+    }
+
+    if (formData.categorias.length === 0) {
+      setError('Selecione pelo menos uma categoria')
+      return
     }
 
     setError('')
@@ -102,7 +102,6 @@ export default function EditarUnidadePage() {
         .from('unidades')
         .update({
           nome: formData.nome,
-          categoria: formData.categoria || null,
           whatsapp: formData.whatsapp || null,
           telefone: formData.telefone || null,
           cep: formData.cep || null,
@@ -115,9 +114,11 @@ export default function EditarUnidadePage() {
           longitude: formData.longitude ? parseFloat(formData.longitude) : null,
           maps_url: formData.maps_url || null,
           is_publico: formData.is_publico,
+          is_public_partner: formData.is_public_partner,
+          categorias: formData.categorias,
         })
         .eq('id', params.id)
-        .eq('empresa_id', empresa.id) // Garante que só edita se for da empresa logada
+        .eq('empresa_id', empresa.id)
 
       if (updateError) throw updateError
 
@@ -133,11 +134,11 @@ export default function EditarUnidadePage() {
 
   if (isLoading) {
     return (
-        <DashboardLayout>
-            <div className="flex justify-center items-center h-64">
-                <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
-            </div>
-        </DashboardLayout>
+      <DashboardLayout>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full" />
+        </div>
+      </DashboardLayout>
     )
   }
 
@@ -146,12 +147,11 @@ export default function EditarUnidadePage() {
       <div className="max-w-4xl">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-            <Link href="/dashboard/unidades">
+          <Link href="/dashboard/unidades">
             <Button variant="ghost" icon={<ArrowLeft className="w-4 h-4" />}>
-                Voltar
+              Voltar
             </Button>
-            </Link>
-            {/* Botão de Excluir poderia estar aqui também */}
+          </Link>
         </div>
 
         <h1 className="text-3xl font-bold text-slate-900 mb-2">Editar Unidade</h1>
@@ -168,10 +168,10 @@ export default function EditarUnidadePage() {
           <Card>
             <CardHeader>
               <CardTitle>Informações Básicas</CardTitle>
-              <CardDescription>Dados principais da unidade</CardDescription>
+              <CardDescription>Dados principais da unidade e categorias de atuação</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <Input
                   label="Nome da Unidade *"
                   placeholder="Ex: Clínica Centro"
@@ -180,24 +180,54 @@ export default function EditarUnidadePage() {
                   required
                 />
 
-                <Input
-                  label="Categoria"
-                  placeholder="Ex: Clínica Médica, Laboratório, Hospital..."
-                  value={formData.categoria}
-                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                />
+                <div className="space-y-3">
+                  <label className="block text-sm font-bold text-slate-900">Categorias da Unidade *</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['CONSULTAS', 'EXAMES', 'FARMÁCIA'].map((cat) => (
+                      <label key={cat} className="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 text-primary-600 rounded"
+                          checked={formData.categorias.includes(cat)}
+                          onChange={(e) => {
+                            const newCats = e.target.checked
+                              ? [...formData.categorias, cat]
+                              : formData.categorias.filter(c => c !== cat)
+                            setFormData({ ...formData, categorias: newCats })
+                          }}
+                        />
+                        <span className="text-sm font-medium text-slate-700">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-                <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="is_publico"
-                    checked={formData.is_publico}
-                    onChange={(e) => setFormData({ ...formData, is_publico: e.target.checked })}
-                    className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
-                  />
-                  <label htmlFor="is_publico" className="text-sm font-medium text-slate-900">
-                    Tornar pública no aplicativo
-                  </label>
+                <div className="flex flex-col gap-4 pt-2">
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <input
+                      type="checkbox"
+                      id="is_publico"
+                      checked={formData.is_publico}
+                      onChange={(e) => setFormData({ ...formData, is_publico: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
+                    />
+                    <label htmlFor="is_publico" className="text-sm font-medium text-slate-900 cursor-pointer">
+                      Tornar pública no aplicativo (visível para usuários)
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-primary-50 rounded-xl border border-primary-100">
+                    <input
+                      type="checkbox"
+                      id="is_public_partner"
+                      checked={formData.is_public_partner}
+                      onChange={(e) => setFormData({ ...formData, is_public_partner: e.target.checked })}
+                      className="w-5 h-5 text-primary-600 rounded border-slate-300 focus:ring-2 focus:ring-primary-500"
+                    />
+                    <label htmlFor="is_public_partner" className="text-sm font-bold text-primary-900 cursor-pointer">
+                      Unidade Pública / Parceira Governamental
+                    </label>
+                  </div>
                 </div>
               </div>
             </CardContent>

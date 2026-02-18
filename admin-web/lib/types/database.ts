@@ -40,6 +40,7 @@ export interface Empresa {
   status: EmpresaStatus
   origin: EmpresaOrigin
   is_public_partner: boolean
+  categorias: string[]
   created_at: string
   updated_at: string | null
   deleted_at: string | null
@@ -94,7 +95,7 @@ export interface Unidade {
   id: string
   empresa_id: string
   nome: string
-  categoria: string | null
+  categorias: string[]
   whatsapp: string | null
   telefone: string | null
   cep: string | null
@@ -109,6 +110,7 @@ export interface Unidade {
   logo_url: string | null
   prioridade: number
   is_publico: boolean
+  is_public_partner: boolean
   status: UnidadeStatus
   created_at: string
   updated_at: string | null
