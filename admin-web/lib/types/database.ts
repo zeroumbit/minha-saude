@@ -152,6 +152,7 @@ export interface UnidadeImagem {
 export interface Especialidade {
   id: string
   nome: string
+  categoria: string | null
   is_system: boolean
 }
 
@@ -168,4 +169,46 @@ export interface AuditLog {
   entidade: string | null
   metadata: Record<string, any> | null
   created_at: string
+}
+
+export interface Profissional {
+  id: string
+  empresa_id: string
+  nome: string
+  sobrenome: string | null
+  registro_profissional: string | null
+  tempo_atendimento_minutos: number
+  valor_normal: number | null
+  valor_pix: number | null
+  valor_cartao: number | null
+  ativo: boolean
+  created_at: string
+  updated_at: string | null
+}
+
+export interface ProfissionalDisponibilidade {
+  id: string
+  profissional_id: string
+  dia_semana: number
+  hora_inicio: string
+  hora_fim: string
+}
+
+export interface Servico {
+  id: string
+  empresa_id: string
+  nome: string
+  ativo: boolean
+  created_at: string
+  updated_at: string | null
+}
+
+export interface ServicoProfissional {
+  servico_id: string
+  profissional_id: string
+}
+
+export interface ServicoUnidade {
+  servico_id: string
+  unidade_id: string
 }

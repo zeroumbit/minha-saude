@@ -14,6 +14,8 @@ import {
   X,
   MapPin,
   User,
+  Stethoscope,
+  Briefcase,
 } from 'lucide-react'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import { createClient } from '@/lib/supabase/client'
@@ -27,6 +29,8 @@ interface DashboardLayoutProps {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Unidades', href: '/dashboard/unidades', icon: MapPin },
+  { name: 'Serviços', href: '/dashboard/servicos', icon: Stethoscope },
+  { name: 'Profissionais', href: '/dashboard/profissionais', icon: Briefcase },
   { name: 'Equipe', href: '/dashboard/equipe', icon: Users },
   { name: 'Assinatura', href: '/dashboard/assinatura', icon: CreditCard },
   { name: 'Configurações', href: '/dashboard/configuracoes', icon: Settings },
